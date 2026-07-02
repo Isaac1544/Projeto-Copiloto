@@ -599,18 +599,18 @@ Feature: Copiloto para triagem de chamados de suporte
 
 # 16. Backlog de Épicos e Features
 
-| ID | Épico/Feature | Status | Observações |
-|---|---|---|---|
-| F-01 | Interpretação de logs | Pronto para Tech Context | Base do MVP |
-| F-02 | Recuperação de KB | Pronto para Tech Context | Depende da estrutura da KB |
-| F-03 | Recuperação de tickets semelhantes | Pronto para Tech Context | Depende de acesso/histórico |
-| F-04 | Diagnóstico provável com confiança | Pronto para Tech Context | Deve ser explicável |
-| F-05 | Rascunho de resposta ao cliente | Pronto para Tech Context | Revisão humana obrigatória |
-| F-06 | Recomendação de escalonamento | Pronto para Tech Context | Usar confiança, severidade e escopo |
-| F-07 | Solicitação de dados adicionais | Pronto para Tech Context | Evitar conclusões sem contexto |
-| F-08 | Sugestão de categorização | Condicional | Depende de taxonomia e exemplos históricos |
-| F-09 | Integração produtiva completa FreshService | Pós-MVP | Fora do escopo do MVP |
-| F-10 | Automação de ações corretivas | Fora do escopo | Não permitido nesta fase |
+| ID | Épico/Feature | Status | Responsável | Observações |
+|---|---|---|---|---|
+| F-01 | Interpretação de logs | Pronto para Tech Context | @engineer | Base do MVP |
+| F-02 | Recuperação de KB | Pronto para Tech Context | @engineer | Depende da estrutura da KB |
+| F-03 | Recuperação de tickets semelhantes | Pronto para Tech Context | @engineer | Depende de acesso/histórico |
+| F-04 | Diagnóstico provável com confiança | Pronto para Tech Context | @engineer | Deve ser explicável |
+| F-05 | Rascunho de resposta ao cliente | Pronto para Tech Context | @engineer | Revisão humana obrigatória |
+| F-06 | Recomendação de escalonamento | Pronto para Tech Context | @engineer | Usar confiança, severidade e escopo |
+| F-07 | Solicitação de dados adicionais | Pronto para Tech Context | @engineer | Evitar conclusões sem contexto |
+| F-08 | Sugestão de categorização | Condicional | @product | Depende de taxonomia e exemplos históricos |
+| F-09 | Integração produtiva completa FreshService | Pós-MVP | — | Fora do escopo do MVP |
+| F-10 | Automação de ações corretivas | Fora do escopo | — | Não permitido nesta fase |
 
 ---
 
@@ -805,6 +805,44 @@ Feature: Copiloto para triagem de chamados de suporte
 # 25. Status Final
 
 ✅ **Produto aprovado para iniciar o Technical Context.**
+
+## Validação de Escopo — Sprint 1
+
+- **Escopo aprovado em:** 2026-06-25
+- **Aprovado por:** [ Beatriz Gadelha e ]
+- **Papel do aprovador:** [ Avaliador do Projeto, Representante do Cliente ]
+- **Status da validação:** Aprovado com ajustes menores
+
+### Itens dentro do escopo do MVP
+
+- Interpretação de logs em texto
+- Recuperação de KB e tickets similares
+- Diagnóstico provável com confiança e evidências
+- Rascunho de resposta ao cliente
+- Recomendação de escalonamento
+- Solicitação de dados adicionais
+- Conformidade básica com LGPD
+
+### Itens fora do escopo do MVP
+
+- Execução automática de ações
+- Resposta direta ao cliente sem revisão humana
+- Integração produtiva completa com FreshService
+- Alterações em infraestrutura
+- Treinamento autônomo com dados sensíveis
+- Automação de ações corretivas
+
+### Restrições confirmadas
+
+- RN-01 — Copiloto consultivo
+- RN-02 — Analista mantém a decisão final
+- RN-03 — IA não responde diretamente ao cliente
+- RN-09 — Dados sensíveis devem ser protegidos ou mascarados
+- RN-10 — Rascunhos exigem revisão humana
+
+### Próxima revisão
+
+A próxima revisão de escopo deve ocorrer ao iniciar o Technical Context / PoC.
 
 ## Condições para Engenharia
 
