@@ -1,19 +1,22 @@
-# Business Context v3 — Desafio B: Copiloto para Analistas de Suporte
+# Business Context v4.1 — Desafio B: Copiloto para Analistas de Suporte
 
-> **Versão:** 3.0 Consolidada  
-> **Data:** 2026-06-25  
-> **Status:** Aprovado para iniciar o Technical Context  
-> **Persona responsável:** @product  
-> **Objetivo:** Consolidar a visão de produto antes do planejamento técnico, preservando rastreabilidade, critérios de aceite, premissas, riscos e indicadores de sucesso.
+> **Versão:** 4.1 — Consolidação final de Produto; v4 como base, incorporando objetivos estratégicos, hipóteses e critérios de sucesso da v3  
+> **Data:** 2026-07-04  
+> **Status:** Pronto para validação final de Produto e encaminhamento ao `@engineer`  
+> **Persona responsável:** `@product` / `@docs Sync`  
+> **Regra Onion:** Produto antes de Engenharia; Engenharia antes de código.  
+> **Nota anti-alucinação:** Este documento separa informações **confirmadas**, **parcialmente confirmadas** e **pendentes**. Nenhuma meta numérica foi inventada.
+> **Nota v4.1:** Esta versão preserva a abordagem de PoC consultiva da v4 e reincorpora da v3 os blocos de objetivos estratégicos, hipóteses de produto e critérios de sucesso para fortalecer rastreabilidade e verificabilidade.
 
 ---
 
 ## Classificação das Informações
 
-- ✅ **Confirmado:** Informação derivada do briefing, kick-off ou consenso de produto.
-- 🟡 **Hipótese:** Suposição a validar em descoberta, protótipo ou MVP.
-- 🔵 **Decisão de Produto:** Diretriz assumida para orientar escopo e implementação.
-- ⚠️ **Pendente:** Item que exige validação adicional antes ou durante o Technical Context.
+- ✅ **Confirmado:** Informação presente no briefing completo, no pacote do projeto ou informada diretamente pelo usuário.
+- 🟡 **Parcialmente confirmado:** Informação com evidência suficiente para orientar a PoC, mas ainda dependente de validação operacional.
+- 🔵 **Decisão de Produto:** Diretriz assumida para orientar o escopo.
+- ⚠️ **Pendente:** Item ainda não confirmado por fonte disponível.
+- 🚫 **Fora do escopo atual:** Item não recomendado para PoC/MVP inicial.
 
 ---
 
@@ -21,38 +24,63 @@
 
 ## 1.1 Problema de Negócio
 
-✅ Analistas de suporte L1 gastam tempo excessivo pesquisando conhecimento distribuído entre tickets antigos, documentação, bases de conhecimento e informações de fabricantes para interpretar logs, diagnosticar incidentes e responder clientes.
+✅ Analistas de suporte L1 da área de Serviços da Clear IT gastam tempo relevante interpretando tickets e logs, pesquisando em múltiplas fontes e reconstruindo diagnósticos que podem já existir em bases internas, tickets anteriores, playbooks, PDFs, wikis ou documentações de fabricantes.
 
-Esse cenário gera:
+O briefing completo reforça que o fluxo atual envolve:
 
-- aumento de MTTR/TMR;
-- aumento de TMA;
-- retrabalho;
-- escalonamentos desnecessários para L2/L3;
-- respostas pouco padronizadas;
-- dependência excessiva de especialistas;
-- perda de conhecimento reutilizável.
+- abertura de chamado no FreshService;
+- triagem inicial pelo analista;
+- leitura da descrição do problema;
+- busca em base de conhecimento;
+- consulta a FAQs, procedimentos internos e externos;
+- pesquisa em histórico de casos semelhantes;
+- elaboração de resposta ao cliente;
+- registro da solução no FreshService ou em outro repositório;
+- em casos específicos, abertura de chamados na fabricante.
 
-## 1.2 Visão do Produto
+## 1.2 Dores confirmadas
 
-🔵 Construir um **Copiloto de IA para Analistas de Suporte**, alinhado ao fluxo do FreshService, que atue como **conselheiro técnico durante a triagem de chamados**.
+✅ As dores centrais são:
 
-O Copiloto deve apoiar o analista na interpretação de logs, recuperação de conhecimento, identificação de tickets semelhantes, sugestão de diagnóstico provável e geração de rascunho de resposta, mantendo sempre a decisão final com o humano.
+1. **Busca manual em múltiplas fontes:** FreshService, KB interna, playbooks, PDFs, wikis, tickets históricos e documentação de fabricantes.
+2. **Interpretação lenta de logs:** leitura de logs brutos e alertas consome tempo da equipe.
+3. **Conhecimento disperso ou tribal:** parte do conhecimento fica em tickets antigos ou na experiência de especialistas.
+4. **Curva de aprendizado longa para L1:** analistas juniores têm dificuldade para encontrar rapidamente o caminho correto de diagnóstico.
+5. **Respostas heterogêneas:** comunicação técnica ao cliente varia entre analistas.
+6. **Escalonamentos evitáveis:** parte dos chamados é escalada porque o L1 não encontra evidência, procedimento ou confiança suficiente.
+7. **Baixo reaproveitamento de conhecimento:** casos semelhantes são pesquisados e resolvidos do zero.
 
-## 1.3 Proposta de Valor
+## 1.3 Visão do Produto
 
-Transformar a busca passiva e manual por conhecimento em entrega ativa de recomendações contextualizadas, com evidências e fontes rastreáveis.
+🔵 Construir uma **PoC consultiva de Copiloto de IA para Analistas de Suporte L1**, alinhada ao fluxo do FreshService, que apoie a triagem de chamados por meio de:
+
+- interpretação de tickets e logs anonimizados;
+- recuperação de conhecimento em KB controlada;
+- identificação de evidências e casos semelhantes;
+- sugestão de diagnóstico provável;
+- indicação de nível de confiança;
+- recomendação de coleta de dados adicionais;
+- recomendação de escalonamento quando necessário;
+- geração de rascunho de resposta para revisão humana.
+
+A IA **não substitui o analista**. A decisão final continua com a pessoa responsável pelo atendimento.
+
+## 1.4 Proposta de Valor
+
+Transformar a busca passiva e manual por conhecimento em uma entrega ativa de recomendações contextualizadas, rastreáveis e seguras.
 
 Valor esperado:
 
-- maior autonomia do Analista L1;
-- menor dependência de especialistas;
-- diagnóstico inicial mais rápido;
-- comunicação mais consistente com o cliente;
-- melhor aproveitamento da base histórica de tickets e KB;
-- redução de escalonamentos evitáveis.
+- reduzir esforço de triagem;
+- acelerar diagnóstico inicial;
+- aumentar autonomia de analistas L1;
+- reduzir dependência de especialistas para casos conhecidos;
+- padronizar comunicação técnica;
+- melhorar reaproveitamento da KB e de casos históricos;
+- reduzir escalonamentos desnecessários;
+- apoiar cumprimento de SLA e qualidade percebida pelo cliente.
 
-## 1.4 Objetivos Estratégicos
+## 1.5 Objetivos Estratégicos
 
 ✅ O produto deve contribuir para:
 
@@ -66,17 +94,24 @@ Valor esperado:
 - aumentar padronização das respostas;
 - preservar conformidade com LGPD e governança interna.
 
+⚠️ Estes objetivos são direcionadores estratégicos. Metas quantitativas específicas dependem de baseline operacional fornecido pela Clear IT.
+
+## 1.6 Pergunta principal do desafio
+
+✅ Como apoiar analistas de suporte L1 com um Copiloto de IA alinhado ao FreshService que interprete logs, consolide conhecimento técnico, sugira diagnósticos precisos e gere rascunhos de resposta, reduzindo MTTR/TMR e escalonamentos desnecessários?
+
 ---
 
-# 2. Stakeholders
+# 2. Stakeholders e Público Impactado
 
-| Perfil | Interesse Principal | Valor Esperado |
-|---|---|---|
-| Analista L1 | Resolver chamados com mais autonomia e velocidade | Diagnóstico inicial, evidências, casos similares e rascunho de resposta |
-| Analista L2/L3 | Receber apenas casos realmente complexos | Menos escalonamentos indevidos e melhor contexto nos casos escalados |
-| Gestor de Suporte | Melhorar produtividade, SLA e qualidade operacional | Indicadores melhores, padronização e rastreabilidade |
-| Cliente Final | Receber respostas rápidas, claras e precisas | Menor tempo de espera e comunicação mais consistente |
-| Compliance/Segurança | Garantir uso seguro da IA e proteção de dados | LGPD, mascaramento, auditoria e explicabilidade |
+| Perfil | Interesse Principal | Valor Esperado | Status |
+|---|---|---|---|
+| Analista L1 | Resolver chamados com mais autonomia e velocidade | Diagnóstico provável, evidências, próximos passos e rascunho de resposta | ✅ Confirmado |
+| Analista L2/L3 | Receber casos realmente complexos e melhor contextualizados | Menos escalonamentos indevidos e handoff mais claro | ✅ Confirmado |
+| Líderes/Coordenação de Suporte | Melhorar produtividade, SLA e qualidade operacional | Indicadores melhores, padronização e rastreabilidade | ✅ Confirmado |
+| Cliente Final | Receber respostas mais rápidas e consistentes | Menor tempo de indisponibilidade e comunicação mais clara | ✅ Confirmado |
+| Pulse Mais / Consultor Executivo | Mediar validações e contato com Clear IT | Governança do desafio e validação assíncrona | ✅ Confirmado |
+| Compliance/Segurança | Garantir confidencialidade, LGPD e uso seguro da IA | Anonimização, controle de dados e auditoria | ✅ Confirmado |
 
 ---
 
@@ -86,783 +121,599 @@ Valor esperado:
 
 ✅ **Responsabilidades**
 
-- Triar chamados.
-- Interpretar sintomas e logs iniciais.
-- Buscar informações em KB, tickets e documentação.
-- Comunicar status e solução ao cliente.
-- Escalar quando necessário.
+- Receber e triagem inicial de tickets.
+- Interpretar sintomas, logs e alertas.
+- Buscar informações em KB, tickets, playbooks e documentação.
+- Elaborar comunicação técnica ao cliente.
+- Escalar quando faltar evidência, procedimento, autorização ou confiança suficiente.
 
 ✅ **Dores**
 
-- Pesquisa manual em múltiplas fontes.
+- Pesquisa manual.
 - Dificuldade para interpretar logs.
 - Dependência de especialistas.
-- Falta de padronização nas respostas.
-- Pouca reutilização de conhecimento histórico.
+- Falta de padronização na resposta.
+- Pouca visibilidade de soluções anteriores.
+- Risco de escalonamento indevido.
 
 ✅ **Necessidades**
 
-- Diagnóstico inicial rápido.
 - Evidências claras.
+- Diagnóstico provável com confiança.
 - Casos semelhantes.
-- Sugestão de próximos passos.
+- Próximos passos consultivos.
+- Critério de escalonamento.
 - Rascunho de resposta revisável.
-- Indicação de quando escalar.
 
 ## 3.2 Analista L2/L3
 
 ✅ **Responsabilidades**
 
 - Atuar em incidentes complexos.
-- Apoiar L1 em casos que exigem profundidade técnica.
-- Validar padrões recorrentes e soluções reutilizáveis.
-
-✅ **Dores**
-
-- Recebimento de escalonamentos incompletos ou indevidos.
-- Retrabalho na investigação inicial.
-- Falta de contexto estruturado vindo do L1.
+- Confirmar diagnósticos quando L1 não tem evidência suficiente.
+- Apoiar intervenção técnica ou física quando necessário.
+- Contribuir para formalização de conhecimento.
 
 ✅ **Necessidades**
 
-- Escalonamentos com evidências.
-- Histórico de investigação inicial.
-- Indicação clara do motivo do escalonamento.
+- Receber casos com contexto.
+- Saber o que o L1 já tentou.
+- Reduzir interrupções por dúvidas repetitivas.
+- Melhorar qualidade do handoff.
 
 ## 3.3 Gestor de Suporte
 
 ✅ **Responsabilidades**
 
-- Acompanhar produtividade.
-- Garantir SLA.
-- Melhorar qualidade de atendimento.
-- Reduzir gargalos operacionais.
-
-✅ **Dores**
-
-- Alto MTTR/TMA.
-- Baixo FCR.
-- Falta de padronização.
-- Conhecimento concentrado em poucas pessoas.
+- Acompanhar produtividade, SLA, qualidade e escalonamentos.
+- Garantir padronização do atendimento.
+- Melhorar aproveitamento da base de conhecimento.
 
 ✅ **Necessidades**
 
-- Indicadores de uso e impacto.
-- Redução de escalonamentos.
-- Melhoria de consistência operacional.
-- Governança sobre recomendações da IA.
-
-## 3.4 Cliente Final
-
-✅ **Interesse**
-
-- Receber respostas mais rápidas, claras e confiáveis.
-
-✅ **Impacto Esperado**
-
-- Menos espera.
-- Melhor clareza na comunicação.
-- Menor necessidade de reabrir chamados.
+- Métricas claras.
+- Evolução de performance do L1.
+- Redução de retrabalho.
+- Evidência de valor antes de avançar para MVP/produto.
 
 ---
 
-# 4. Dores do Cliente
+# 4. Jornada Atual
 
-| ID | Dor | Descrição | Impacto |
-|---|---|---|---|
-| D-01 | Busca manual em múltiplas fontes | Analista precisa consultar KB, tickets, docs e colegas separadamente | Aumenta MTTR/TMA |
-| D-02 | Conhecimento concentrado em especialistas | Soluções ficam na experiência de L2/L3 ou em tickets antigos | Aumenta dependência e escalonamentos |
-| D-03 | Interpretação difícil de logs | Logs longos ou incompletos dificultam diagnóstico inicial | Aumenta erro e retrabalho |
-| D-04 | Respostas pouco padronizadas | Cada analista responde de forma diferente | Afeta qualidade e CSAT |
-| D-05 | Escalonamentos incompletos | L2/L3 recebe casos sem contexto suficiente | Gera retrabalho |
-| D-06 | Baixa rastreabilidade de recomendações | Falta clareza sobre origem de diagnóstico ou sugestão | Reduz confiança e auditabilidade |
-
----
-
-# 5. Hipóteses de Produto
-
-| ID | Hipótese | Como Validar |
-|---|---|---|
-| H-01 | A investigação inicial é a etapa mais demorada do atendimento L1 | Medir tempo de triagem antes/depois do protótipo |
-| H-02 | O conhecimento reutilizável está concentrado em tickets antigos e KB | Amostrar tickets resolvidos e mapear recorrência |
-| H-03 | Recomendações com evidências reduzem escalonamentos indevidos | Comparar taxa de escalonamento com/sem Copiloto |
-| H-04 | Rascunhos padronizados reduzem TMA e melhoram consistência | Avaliar tempo de resposta e qualidade percebida |
-| H-05 | Exibir confiança e limitações aumenta a adoção pelos analistas | Testes com usuários e coleta qualitativa |
-| H-06 | Logs incompletos exigirão solicitação de dados adicionais | Avaliar frequência de respostas “contexto insuficiente” |
-
----
-
-# 6. Jornada Atual
-
-✅ Fluxo atual resumido:
-
-1. Cliente abre chamado.
-2. Analista L1 lê o ticket.
-3. Analista interpreta logs manualmente.
-4. Analista pesquisa na KB.
-5. Analista pesquisa tickets antigos.
-6. Analista consulta colegas ou especialistas.
-7. Analista responde ao cliente ou escala para L2/L3.
+```text
+Cliente abre chamado no FreshService
+    ↓
+Analista L1 lê descrição e anexos
+    ↓
+Analista interpreta sintomas/logs manualmente
+    ↓
+Analista consulta KB interna, FAQs, playbooks, PDFs, wikis e bases externas
+    ↓
+Analista busca tickets semelhantes ou conhecimento informal
+    ↓
+Analista monta diagnóstico inicial
+    ↓
+Analista responde cliente ou escala para L2/L3
+    ↓
+Solução é registrada no FreshService ou repositório de conhecimento
+```
 
 ## Problemas da Jornada Atual
 
-- Alta fricção na investigação.
-- Busca distribuída.
-- Diagnóstico inicial inconsistente.
-- Pouca rastreabilidade da origem das respostas.
-- Escalonamento pode ocorrer antes de esgotar conhecimento disponível.
+- Alto esforço manual.
+- Múltiplas abas e fontes.
+- Baixa descoberta de soluções anteriores.
+- Risco de diagnóstico impreciso.
+- Vai-e-vem com cliente por falta de informação.
+- Escalonamento para confirmar diagnósticos.
+- Conhecimento formalizado de forma irregular.
 
 ---
 
-# 7. Jornada Futura
+# 5. Jornada Futura da PoC
 
-🔵 Fluxo futuro desejado:
-
-1. Cliente abre chamado.
-2. Analista L1 envia ou seleciona logs/contexto do ticket.
-3. Copiloto interpreta eventos relevantes.
-4. Copiloto consulta KB e tickets semelhantes.
-5. Copiloto sugere diagnóstico provável.
-6. Copiloto apresenta evidências, fontes e nível de confiança.
-7. Copiloto sugere próximos passos ou escalonamento quando apropriado.
-8. Copiloto gera rascunho de resposta.
-9. Analista revisa, decide e envia.
+```text
+Ticket/log anonimizado é inserido no fluxo da PoC
+    ↓
+Copiloto aplica validação e mascaramento de dados
+    ↓
+Copiloto extrai sintomas, erros, componentes e sinais técnicos
+    ↓
+Copiloto consulta KB controlada e documentos autorizados
+    ↓
+Copiloto recupera evidências e possíveis casos semelhantes
+    ↓
+Claude gera análise consultiva com base nas evidências
+    ↓
+Copiloto apresenta diagnóstico provável, confiança e limites da análise
+    ↓
+Copiloto recomenda resolver, pedir mais dados ou escalar
+    ↓
+Copiloto gera rascunho de resposta
+    ↓
+Analista humano revisa, edita e decide
+```
 
 ## Princípio Central
 
-🔵 A IA **apoia a decisão**, mas não substitui o analista.
+🔵 **IA recomenda. Humano decide.**
+
+A PoC deve provar o fluxo de inteligência e sugestão, sem automatizar resposta ao cliente, sem alterar tickets produtivos e sem executar comandos.
 
 ---
 
-# 8. Escopo do MVP
+# 6. Escopo da PoC
 
-## 8.1 Incluído no MVP
+## 6.1 Incluído
 
-✅ O MVP deve contemplar:
+✅ A PoC deve incluir:
 
-- interpretação de logs em texto;
-- identificação de mensagens relevantes;
-- indicação de severidade;
-- busca em base de conhecimento;
-- busca por tickets semelhantes;
-- exibição de fontes consultadas;
-- sugestão de diagnóstico provável;
-- indicação de nível de confiança;
-- explicação das evidências utilizadas;
-- rascunho de resposta para o cliente;
-- sugestão de escalonamento quando a confiança for baixa ou o caso exigir L2/L3;
-- solicitação de dados adicionais quando o contexto for insuficiente;
-- preservação da decisão humana;
-- conformidade básica com LGPD.
-
-## 8.2 Incluído Condicionalmente
-
-⚠️ A sugestão de categorização poderá entrar no MVP apenas se houver:
-
-- taxonomia oficial de categorias;
-- campos estruturados disponíveis;
-- exemplos históricos suficientes;
-- validação com o gestor de suporte.
-
-Caso essas condições não sejam atendidas, a categorização deve ir para o backlog pós-MVP.
-
-## 8.3 Fora do Escopo do MVP
-
-🔵 O MVP não deve contemplar:
-
-- execução automática de ações;
-- resposta direta ao cliente sem revisão humana;
-- alterações em infraestrutura;
-- integração produtiva completa com FreshService;
-- automação de correções;
-- atualização automática de tickets sem aprovação;
-- substituição de fluxos formais de escalonamento;
-- treinamento autônomo com dados sensíveis sem governança.
-
----
-
-# 9. Critérios de Sucesso
-
-| ID | Critério | Resultado Esperado |
-|---|---|---|
-| CS-01 | Apoiar interpretação de logs | Mensagens relevantes, severidade e hipótese inicial são apresentadas |
-| CS-02 | Localizar conhecimento relevante | KB e tickets similares aparecem com fontes rastreáveis |
-| CS-03 | Gerar respostas consistentes | Rascunhos seguem tom e estrutura esperados |
-| CS-04 | Preservar decisão humana | Nenhuma resposta ou ação é executada sem aprovação |
-| CS-05 | Respeitar LGPD | Dados sensíveis são tratados com cuidado e mascaramento quando aplicável |
-| CS-06 | Explicar recomendações | Diagnóstico vem acompanhado de evidências, confiança e limitações |
-| CS-07 | Reduzir escalonamentos indevidos | Casos simples recorrentes são resolvidos pelo L1 com apoio |
-| CS-08 | Melhorar experiência do analista | Analista percebe redução de esforço de pesquisa |
-
----
-
-# 10. Requisitos Funcionais
-
-## RF-01 — Interpretar Logs
-
-✅ O sistema deve permitir que o analista envie logs em texto para análise.
-
-### Comportamento Esperado
-
-- Receber logs em texto livre.
-- Identificar mensagens relevantes.
-- Destacar erros, alertas e eventos críticos.
-- Indicar severidade.
-- Sugerir possível causa.
-- Informar quando o contexto for insuficiente.
-
-### Saída Esperada
-
-- resumo do log;
-- eventos relevantes;
-- severidade;
-- hipótese inicial;
-- dados faltantes, se houver.
-
----
-
-## RF-02 — Recuperar Conhecimento
-
-✅ O sistema deve consultar fontes de conhecimento para apoiar a investigação.
-
-### Fontes Previstas
-
-- base de conhecimento;
-- tickets antigos;
-- documentação operacional disponível;
-- registros de soluções recorrentes.
-
-### Comportamento Esperado
-
-- Buscar conteúdos relacionados ao problema.
-- Recuperar tickets semelhantes.
-- Exibir fontes utilizadas.
-- Indicar grau de relevância.
-- Diferenciar evidência forte de referência fraca.
-
-### Saída Esperada
-
-- lista de fontes;
-- trechos ou resumos relevantes;
-- tickets similares;
-- relação entre fonte e diagnóstico.
-
----
-
-## RF-03 — Sugerir Diagnóstico Provável
-
-✅ O sistema deve sugerir diagnóstico com base nos logs e no conhecimento recuperado.
-
-### Comportamento Esperado
-
-- Apresentar hipótese principal.
-- Indicar nível de confiança.
-- Explicar evidências.
-- Listar hipóteses alternativas quando apropriado.
-- Informar limitações.
-
-### Saída Esperada
-
+- uso de tickets/logs anonimizados;
+- uso de KB exportada e/ou controlada;
+- uso de Claude como provedor de IA;
+- interpretação de ticket/log;
+- recuperação de evidências;
 - diagnóstico provável;
-- confiança;
-- evidências;
-- hipóteses alternativas;
-- limitação ou incerteza.
+- nível de confiança;
+- recomendação de escalonamento;
+- solicitação de dados adicionais;
+- rascunho de resposta para revisão;
+- avaliação humana do resultado;
+- registro de aceito/editado/rejeitado;
+- validação dos dois casos de uso citados no briefing, se os materiais forem disponibilizados.
+
+## 6.2 Casos de uso prioritários
+
+✅ O briefing completo cita dois casos que devem virar cenários oficiais da PoC:
+
+1. **Alerta de Alto Uso de Disco em CVM.**
+2. **Falha no Cluster por Crash do Serviço Acropolis.**
+
+Para cada caso, a PoC deve demonstrar:
+
+- entrada do ticket/log;
+- mascaramento;
+- sinais técnicos extraídos;
+- evidências recuperadas;
+- diagnóstico provável;
+- nível de confiança;
+- recomendação de resolução, coleta de dados ou escalonamento;
+- rascunho de resposta ao cliente.
+
+## 6.3 Incluído condicionalmente
+
+🟡 Pode entrar se houver autorização, documentação e dados suficientes:
+
+- consulta a massa exportada de tickets históricos;
+- uso de prints do FreshService com tarjas;
+- uso de artigos internos exportados;
+- uso de documentação de fabricante previamente autorizada;
+- simulação fiel do fluxo do FreshService.
+
+## 6.4 Fora do escopo da PoC
+
+🚫 Não entra na PoC:
+
+- acesso direto ao FreshService produtivo por participantes externos;
+- escrita automática em tickets reais;
+- envio automático de resposta ao cliente;
+- execução automática de comandos;
+- alteração de infraestrutura;
+- uso de dados reais não anonimizados;
+- scraping não autorizado de bases externas;
+- promessa de redução quantitativa de MTTR sem baseline.
 
 ---
 
-## RF-04 — Gerar Rascunho de Resposta
+# 7. Requisitos Funcionais
 
-✅ O sistema deve gerar um rascunho de resposta para o cliente.
+## RF-01 — Interpretar ticket/log
 
-### Comportamento Esperado
+O Copiloto deve receber um ticket/log anonimizado e extrair:
 
-- Gerar texto claro e revisável.
-- Manter tom profissional.
-- Evitar prometer ações não confirmadas.
-- Separar o que é diagnóstico provável do que é conclusão confirmada.
-- Permitir revisão humana antes do envio.
+- resumo do incidente;
+- sintomas;
+- mensagens de erro;
+- componente/serviço afetado, quando disponível;
+- severidade aparente;
+- dados ausentes;
+- sinais que indiquem necessidade de escalonamento.
 
-### Saída Esperada
+## RF-02 — Mascarar ou bloquear dados sensíveis
 
-- rascunho de resposta;
-- pontos que exigem validação;
+Antes de enviar conteúdo ao Claude, o Copiloto deve aplicar uma camada de sanitização.
+
+Categorias iniciais a proteger:
+
+- nomes de clientes;
+- nomes de pessoas;
+- e-mails;
+- telefones;
+- IDs de cliente, contrato ou ticket;
+- IPs, hostnames e topologias identificáveis;
+- tokens, chaves, segredos e credenciais;
+- anexos ou prints sem tarja;
+- qualquer PII ou dado real de cliente.
+
+⚠️ A lista oficial de campos sensíveis ainda precisa ser validada pela Clear IT.
+
+## RF-03 — Recuperar conhecimento
+
+O Copiloto deve buscar evidências em fontes autorizadas:
+
+- KB exportada;
+- playbooks;
+- artigos internos;
+- procedimentos de workaround;
+- runbooks validados;
+- tickets históricos anonimizados;
+- documentação de fabricante previamente autorizada.
+
+## RF-04 — Sugerir diagnóstico provável
+
+O Copiloto deve gerar diagnóstico provável com:
+
+- evidências;
+- fontes;
+- hipóteses alternativas, quando existirem;
+- limitações da análise;
+- confiança Alta, Média ou Baixa.
+
+## RF-05 — Recomendar escalonamento
+
+O Copiloto deve recomendar escalonamento quando:
+
+- não houver evidência suficiente;
+- a confiança for baixa;
+- faltar dado essencial;
+- o caso exigir autorização/intervenção física;
+- o caso envolver risco operacional alto;
+- houver falha crítica sem procedimento validado;
+- o histórico indicar necessidade de L2/L3.
+
+## RF-06 — Solicitar dados adicionais
+
+Quando o ticket/log estiver incompleto, o Copiloto deve pedir dados adicionais em vez de inventar diagnóstico.
+
+## RF-07 — Gerar rascunho de resposta
+
+O Copiloto deve gerar rascunho técnico, claro e revisável, respeitando:
+
+- padrão de comunicação oficial do atendimento;
+- evidências encontradas;
+- limites da análise;
+- orientação de próximo passo;
 - linguagem adequada ao cliente.
 
----
+## RF-08 — Registrar avaliação humana
 
-## RF-05 — Recomendar Escalonamento
+A PoC deve registrar, no mínimo:
 
-✅ O sistema deve recomendar escalonamento quando o caso exigir apoio de L2/L3.
-
-### Condições de Escalonamento
-
-- baixa confiança no diagnóstico;
-- ausência de dados suficientes;
-- severidade alta;
-- indício de incidente complexo;
-- necessidade de permissão ou ação fora do escopo L1;
-- recorrência crítica sem solução conhecida.
-
-### Saída Esperada
-
-- recomendação de escalar ou não escalar;
-- justificativa;
-- evidências;
-- dados que devem acompanhar o escalonamento.
+- caso analisado;
+- saída do Copiloto;
+- avaliação humana;
+- status: aceito, editado, rejeitado;
+- motivo da edição/rejeição;
+- observações de segurança ou qualidade.
 
 ---
 
-## RF-06 — Solicitar Dados Adicionais
+# 8. Requisitos Não Funcionais
 
-✅ O sistema deve informar quando o contexto é insuficiente.
-
-### Comportamento Esperado
-
-- Identificar lacunas nos logs ou no ticket.
-- Solicitar informações complementares.
-- Sugerir perguntas ao cliente ou ao solicitante.
-- Evitar diagnóstico assertivo sem evidência mínima.
-
-### Saída Esperada
-
-- lista de dados faltantes;
-- perguntas recomendadas;
-- justificativa da necessidade.
+| ID | Requisito | Descrição | Status |
+|---|---|---|---|
+| RNF-01 | Segurança | Nenhum dado sensível deve ser enviado ao Claude antes de anonimização | ✅ Confirmado |
+| RNF-02 | LGPD | PII e topologia identificável não devem trafegar em ambientes não homologados | ✅ Confirmado |
+| RNF-03 | Rastreabilidade | Toda recomendação deve apontar evidência/fonte quando possível | ✅ Confirmado |
+| RNF-04 | Revisão humana | Respostas são rascunhos, não envio automático | ✅ Confirmado |
+| RNF-05 | Explicabilidade | A resposta deve separar fato, hipótese, evidência e limitação | ✅ Confirmado |
+| RNF-06 | Não automação crítica | O Copiloto não executa comandos nem corrige infraestrutura | ✅ Confirmado |
+| RNF-07 | Controle de fonte | Só usar KB/documentos autorizados | ✅ Confirmado |
+| RNF-08 | Métricas | Avaliação precisa considerar utilidade, segurança e evidência | ✅ Confirmado |
+| RNF-09 | Integração futura | FreshService API depende de permissões, credenciais e homologação | 🟡 Parcial |
 
 ---
 
-## RF-07 — Sugerir Categorização
+# 9. Histórias de Usuário
 
-⚠️ Requisito condicional.
+## HU-01 — Analisar ticket/log
 
-### Condição para Entrar no MVP
+**Como** analista L1,  
+**quero** inserir um ticket/log anonimizado no Copiloto,  
+**para** receber um resumo técnico inicial e entender quais sinais são relevantes.
 
-Este requisito só deve entrar no MVP se houver taxonomia oficial de categorias e exemplos históricos suficientes.
+### Critérios de aceite
 
-### Comportamento Esperado
+- O Copiloto resume o incidente sem expor dados sensíveis.
+- O Copiloto identifica sintomas e dados ausentes.
+- O Copiloto não afirma causa raiz sem evidência.
+- O Copiloto informa limitações da análise.
 
-- Sugerir categoria do ticket.
-- Indicar confiança.
-- Exibir critérios usados.
-- Permitir revisão humana.
+## HU-02 — Recuperar evidências
 
----
+**Como** analista L1,  
+**quero** receber evidências de KB, playbooks, runbooks ou tickets históricos anonimizados,  
+**para** não resolver casos recorrentes do zero.
 
-# 11. Requisitos Não Funcionais
+### Critérios de aceite
 
-| ID | Requisito | Descrição |
-|---|---|---|
-| RNF-01 | LGPD | Tratar dados pessoais e sensíveis conforme políticas aplicáveis |
-| RNF-02 | Mascaramento | Mascarar dados sensíveis quando necessário |
-| RNF-03 | Segurança | Proteger acesso a tickets, KB e logs |
-| RNF-04 | Rastreabilidade | Registrar fontes usadas e recomendações geradas |
-| RNF-05 | Explicabilidade | Explicar diagnóstico, evidências e limitações |
-| RNF-06 | Auditabilidade | Permitir revisão posterior das recomendações |
-| RNF-07 | Baixa alucinação | Evitar respostas sem fonte ou sinalizar incerteza |
-| RNF-08 | Usabilidade | Resposta deve ser clara para uso operacional pelo L1 |
-| RNF-09 | Performance | Tempo de resposta deve ser compatível com atendimento de suporte |
-| RNF-10 | Observabilidade | Medir uso, taxa de aceitação e falhas de recuperação |
+- Cada recomendação operacional deve apontar fonte ou indicar ausência de evidência.
+- O Copiloto diferencia fonte validada, documentação pública e hipótese.
+- Conteúdos de fabricante só são usados quando autorizados ou previamente exportados.
 
----
+## HU-03 — Receber diagnóstico provável
 
-# 12. Regras de Negócio
+**Como** analista L1,  
+**quero** receber um diagnóstico provável com confiança,  
+**para** decidir se sigo com o atendimento, peço mais dados ou escalo.
 
-| ID | Regra | Classificação |
-|---|---|---|
-| RN-01 | A IA atua como copiloto consultivo, não como agente autônomo | 🔵 |
-| RN-02 | O analista mantém a decisão final | 🔵 |
-| RN-03 | A IA não responde diretamente ao cliente | 🔵 |
-| RN-04 | A IA não executa ações em infraestrutura | 🔵 |
-| RN-05 | Recomendações devem indicar origem quando possível | ✅ |
-| RN-06 | Diagnósticos devem indicar confiança e limitações | ✅ |
-| RN-07 | Quando faltar contexto, a IA deve solicitar mais dados | ✅ |
-| RN-08 | Escalonamentos devem considerar confiança, severidade e escopo L1 | ✅ |
-| RN-09 | Dados sensíveis devem ser protegidos ou mascarados | ✅ |
-| RN-10 | O analista deve revisar todo rascunho antes do envio | 🔵 |
-| RN-11 | A ausência de evidência deve ser explicitada | 🔵 |
-| RN-12 | A IA deve diferenciar hipótese, evidência e conclusão | 🔵 |
+### Critérios de aceite
 
----
+- A saída contém diagnóstico provável, evidências e confiança.
+- Confiança baixa gera recomendação de cautela.
+- Dados insuficientes geram pedido de informação, não conclusão inventada.
 
-# 13. Histórias de Usuário
+## HU-04 — Gerar rascunho de resposta
 
-## HU-01 — Interpretar Logs
-
-**Como** Analista L1,  
-**quero** enviar logs ao Copiloto,  
-**para** entender rapidamente eventos relevantes e reduzir o tempo de diagnóstico inicial.
-
-### Critérios de Aceite
-
-- Dado um log em texto, quando o analista solicitar apoio, então o sistema deve destacar mensagens relevantes.
-- Dado um log com erro identificável, quando a análise for concluída, então o sistema deve indicar severidade.
-- Dado um log incompleto, quando não houver evidência suficiente, então o sistema deve informar contexto insuficiente.
-- Dado um log analisado, então a resposta deve diferenciar evidência de hipótese.
-
----
-
-## HU-02 — Recuperar Conhecimento
-
-**Como** Analista L1,  
-**quero** receber artigos de KB e tickets semelhantes,  
-**para** reutilizar conhecimento existente durante a triagem.
-
-### Critérios de Aceite
-
-- Dado um ticket com contexto, quando o Copiloto buscar conhecimento, então deve retornar fontes relevantes.
-- Dado um ticket semelhante encontrado, então o sistema deve indicar por que ele é semelhante.
-- Dado conhecimento recuperado, então o sistema deve exibir a origem.
-- Dado que nenhuma fonte relevante seja encontrada, então o sistema deve informar essa limitação.
-
----
-
-## HU-03 — Receber Diagnóstico Provável
-
-**Como** Analista L1,  
-**quero** receber uma hipótese de diagnóstico com evidências,  
-**para** decidir o próximo passo com mais segurança.
-
-### Critérios de Aceite
-
-- Dado um ticket com log e contexto, quando o analista solicitar apoio, então o sistema apresenta diagnóstico provável.
-- A resposta deve informar nível de confiança.
-- A resposta deve explicar evidências usadas.
-- A resposta deve informar limitações.
-- Quando aplicável, a resposta deve sugerir hipóteses alternativas.
-
----
-
-## HU-04 — Gerar Rascunho de Resposta
-
-**Como** Analista L1,  
+**Como** analista L1,  
 **quero** receber um rascunho de resposta ao cliente,  
-**para** comunicar o andamento ou solução de forma mais rápida e padronizada.
+**para** acelerar a comunicação mantendo revisão humana.
 
-### Critérios de Aceite
+### Critérios de aceite
 
-- O rascunho deve ser claro, profissional e revisável.
-- O rascunho não deve afirmar conclusões sem evidência.
-- O rascunho deve indicar quando há necessidade de dados adicionais.
-- O envio final deve depender da aprovação humana.
+- O rascunho é claro e revisável.
+- O rascunho não promete solução sem confirmação.
+- O rascunho respeita a diretriz consultiva e o padrão oficial de comunicação.
+- O analista pode aceitar, editar ou rejeitar.
 
----
+## HU-05 — Recomendar escalonamento
 
-## HU-05 — Recomendar Escalonamento
+**Como** analista L1,  
+**quero** que o Copiloto recomende escalonamento quando não houver informação suficiente,  
+**para** evitar risco operacional e melhorar o handoff para L2/L3.
 
-**Como** Analista L1,  
-**quero** saber quando devo escalar um chamado,  
-**para** evitar escalonamentos indevidos e garantir tratamento adequado para casos complexos.
+### Critérios de aceite
 
-### Critérios de Aceite
-
-- O sistema deve recomendar escalonamento quando a confiança for baixa.
-- O sistema deve recomendar escalonamento quando houver severidade alta ou escopo fora do L1.
-- A recomendação deve incluir justificativa.
-- A recomendação deve listar dados que devem acompanhar o escalonamento.
+- Escalonamento é sugerido quando faltam evidência, dados, procedimento ou confiança.
+- A recomendação explica o motivo.
+- A saída lista o que deve ser enviado ao L2/L3.
 
 ---
 
-# 14. Cenário BDD Principal
+# 10. Regras de Negócio
 
-```gherkin
-Feature: Copiloto para triagem de chamados de suporte
-
-  Scenario: Apoiar Analista L1 na investigação de ticket com log
-    Given um ticket com descrição e log técnico
-    When o analista solicitar apoio ao Copiloto
-    Then o sistema deve apresentar um resumo do log
-    And deve destacar mensagens relevantes
-    And deve recuperar fontes da KB e tickets semelhantes quando disponíveis
-    And deve sugerir um diagnóstico provável
-    And deve informar nível de confiança
-    And deve explicar as evidências utilizadas
-    And deve explicitar limitações ou dados faltantes
-    And deve gerar um rascunho de resposta revisável
-    And não deve executar ações nem responder diretamente ao cliente
-```
-
----
-
-# 15. Rastreabilidade
-
-| Dor | Requisito | Funcionalidade | Critério de Sucesso |
-|---|---|---|---|
-| D-01 Busca manual em múltiplas fontes | RF-02 | Recuperação de KB e tickets | CS-02 |
-| D-02 Conhecimento concentrado | RF-02, RF-03 | Casos semelhantes e diagnóstico | CS-02, CS-07 |
-| D-03 Interpretação difícil de logs | RF-01 | Análise de logs | CS-01 |
-| D-04 Respostas pouco padronizadas | RF-04 | Rascunho de resposta | CS-03 |
-| D-05 Escalonamentos incompletos | RF-05, RF-06 | Recomendação de escalonamento e dados faltantes | CS-07 |
-| D-06 Baixa rastreabilidade | RF-02, RF-03, RNF-04 | Fontes, evidências e confiança | CS-06 |
-
----
-
-# 16. Backlog de Épicos e Features
-
-| ID | Épico/Feature | Status | Responsável | Observações |
-|---|---|---|---|---|
-| F-01 | Interpretação de logs | Pronto para Tech Context | @engineer | Base do MVP |
-| F-02 | Recuperação de KB | Pronto para Tech Context | @engineer | Depende da estrutura da KB |
-| F-03 | Recuperação de tickets semelhantes | Pronto para Tech Context | @engineer | Depende de acesso/histórico |
-| F-04 | Diagnóstico provável com confiança | Pronto para Tech Context | @engineer | Deve ser explicável |
-| F-05 | Rascunho de resposta ao cliente | Pronto para Tech Context | @engineer | Revisão humana obrigatória |
-| F-06 | Recomendação de escalonamento | Pronto para Tech Context | @engineer | Usar confiança, severidade e escopo |
-| F-07 | Solicitação de dados adicionais | Pronto para Tech Context | @engineer | Evitar conclusões sem contexto |
-| F-08 | Sugestão de categorização | Condicional | @product | Depende de taxonomia e exemplos históricos |
-| F-09 | Integração produtiva completa FreshService | Pós-MVP | — | Fora do escopo do MVP |
-| F-10 | Automação de ações corretivas | Fora do escopo | — | Não permitido nesta fase |
-
----
-
-# 17. KPIs e Métricas de Produto
-
-## 17.1 KPIs Principais
-
-| KPI | Objetivo | Direção Esperada |
+| ID | Regra | Status |
 |---|---|---|
-| MTTR/TMR | Medir tempo total de resolução | Reduzir |
-| TMA | Medir tempo médio de atendimento | Reduzir |
-| FCR | Medir resolução no primeiro contato/nível | Aumentar |
-| Escalonamentos | Medir volume de chamados enviados para L2/L3 | Reduzir indevidos |
-| Reabertura de chamados | Medir qualidade da resolução | Reduzir |
-| SLA | Medir cumprimento de prazos | Aumentar cumprimento |
-| CSAT | Medir satisfação do cliente | Aumentar |
-| NPS | Medir percepção geral de valor | Aumentar |
-
-## 17.2 Métricas Operacionais do Copiloto
-
-| Métrica | Objetivo |
-|---|---|
-| Taxa de uso por analista | Medir adoção |
-| Taxa de aceitação de rascunhos | Medir utilidade da comunicação |
-| Taxa de diagnóstico útil | Medir qualidade percebida |
-| Taxa de resposta com fonte | Medir rastreabilidade |
-| Taxa de contexto insuficiente | Medir qualidade dos dados de entrada |
-| Tempo de resposta do Copiloto | Medir viabilidade operacional |
-| Feedback positivo/negativo por recomendação | Melhorar produto e governança |
+| RN-01 | O Copiloto é consultivo; a decisão final é humana | ✅ Confirmado |
+| RN-02 | Nenhum dado real de cliente, PII ou topologia identificável deve ir para ambiente não homologado | ✅ Confirmado |
+| RN-03 | Dados sensíveis devem ser anonimizados antes de compartilhar com squads ou processar por IA | ✅ Confirmado |
+| RN-04 | Participantes externos não terão credenciais diretas ao FreshService produtivo sem supervisão | ✅ Confirmado |
+| RN-05 | A PoC deve comprovar fluxo de inteligência e sugestão, não integração nativa completa | ✅ Confirmado |
+| RN-06 | Integração FreshService é futura e depende de API, permissões e homologação | 🟡 Parcial |
+| RN-07 | Documentação de fabricante deve ser usada apenas quando pública, autorizada ou exportada | 🟡 Parcial |
+| RN-08 | O Copiloto não deve executar ações técnicas automaticamente | ✅ Confirmado |
+| RN-09 | Métricas quantitativas dependem de baseline; não inventar números | ✅ Confirmado |
+| RN-10 | Claude é o provedor de IA definido pelo usuário para este projeto | ✅ Confirmado |
 
 ---
 
-# 18. Riscos
+# 11. KPIs e Métricas
 
-| ID | Risco | Impacto | Mitigação |
+## 11.1 Indicadores de negócio confirmados
+
+- TMA/TMR.
+- MTTR.
+- SLA de atendimento e resolução.
+- Volume de tickets por analista.
+- Taxa de reabertura.
+- CSAT/NPS.
+- First Call Resolution (FCR).
+- Taxa de escalonamento para L2/L3.
+- Proporção de incidentes resolvidos pelo Nível 1.
+- Feedback qualitativo da equipe de suporte.
+
+## 11.2 Métricas da PoC
+
+Como os baselines reais ainda não foram fornecidos, a PoC deve medir:
+
+- percentual de casos com diagnóstico útil;
+- percentual de respostas com evidência rastreável;
+- percentual de casos em que o Copiloto pediu mais dados corretamente;
+- percentual de casos em que o escalonamento foi recomendado de forma adequada;
+- taxa de rascunhos aceitos, editados e rejeitados;
+- ocorrências de exposição de dados sensíveis;
+- avaliação qualitativa por L1/L2/L3, Pulse Mais ou consultor.
+
+## 11.3 Critério inicial de sucesso da PoC
+
+🔵 Critério inicial proposto, sujeito à validação:
+
+> A PoC será considerada positiva se, em uma amostra de casos anonimizados, o Copiloto produzir análise útil, evidência rastreável, recomendação de próximo passo e rascunho revisável na maioria dos casos avaliados, sem expor dados sensíveis e sem inventar diagnóstico quando faltarem evidências.
+
+⚠️ O percentual exato de aprovação deve ser definido com o cliente/consultor, pois não há baseline ou meta numérica oficial nos materiais analisados.
+
+---
+
+## 11.4 Critérios de Sucesso da PoC
+
+| ID | Critério | Resultado Esperado | Status |
 |---|---|---|---|
-| R-01 | Baixa qualidade da KB | Recomendações fracas ou incorretas | Curadoria, ranking de fontes e sinalização de confiança |
-| R-02 | Logs incompletos | Diagnóstico impreciso | RF-06: solicitar dados adicionais |
-| R-03 | Resistência dos usuários | Baixa adoção | UX simples, explicabilidade e piloto com L1 |
-| R-04 | Limitações das APIs do FreshService | Integração limitada | MVP desacoplado e integração produtiva pós-MVP |
-| R-05 | Dados sensíveis nos logs | Risco LGPD | Mascaramento, políticas de retenção e controle de acesso |
-| R-06 | Alucinação da IA | Perda de confiança | RAG com fontes, confiança e limitações explícitas |
-| R-07 | Escalonamento incorreto | Retrabalho ou atraso | Regras de confiança, severidade e revisão humana |
-| R-08 | Base histórica pouco padronizada | Similaridade ruim | Normalização, metadados e avaliação de relevância |
+| CS-01 | Apoiar interpretação de logs | Mensagens relevantes, severidade e hipótese inicial são apresentadas | ✅ Confirmado |
+| CS-02 | Localizar conhecimento relevante | KB, runbooks, playbooks ou tickets similares aparecem com fontes rastreáveis | ✅ Confirmado |
+| CS-03 | Gerar respostas consistentes | Rascunhos seguem tom, estrutura e limites esperados para revisão humana | ✅ Confirmado |
+| CS-04 | Preservar decisão humana | Nenhuma resposta ou ação é executada sem aprovação do analista | ✅ Confirmado |
+| CS-05 | Respeitar LGPD e segurança | Dados sensíveis são bloqueados, mascarados ou tratados conforme política validada | ✅ Confirmado |
+| CS-06 | Explicar recomendações | Diagnóstico vem acompanhado de evidências, confiança e limitações | ✅ Confirmado |
+| CS-07 | Reduzir escalonamentos indevidos | Casos simples ou recorrentes são resolvidos pelo L1 com apoio, quando houver evidência suficiente | 🟡 Parcial |
+| CS-08 | Melhorar experiência do analista | Analista percebe redução de esforço de pesquisa e maior clareza na triagem | 🟡 Parcial |
 
----
+⚠️ Os critérios CS-07 e CS-08 dependem de avaliação com amostra real ou controlada, definição de baseline e validação humana por L1/L2/L3.
 
-# 19. Premissas
+# 12. Hipóteses de Produto
 
-| ID | Premissa |
-|---|---|
-| P-01 | Haverá acesso a uma base de conhecimento ou amostra representativa para o MVP |
-| P-02 | Haverá histórico de tickets suficiente para buscar casos semelhantes |
-| P-03 | Analistas revisarão respostas antes de enviar ao cliente |
-| P-04 | O MVP poderá ser validado inicialmente sem integração produtiva completa |
-| P-05 | APIs ou exportações do FreshService estarão disponíveis para evolução futura |
-| P-06 | A organização aceitará um modelo consultivo com decisão humana obrigatória |
-| P-07 | Haverá diretrizes mínimas de LGPD, segurança e mascaramento |
-| P-08 | O gestor de suporte participará da validação dos critérios de sucesso |
-
----
-
-# 20. Itens Pendentes
-
-| ID | Pendência | Impacto | Responsável Sugerido |
+| ID | Hipótese | Como Validar | Status |
 |---|---|---|---|
-| Pend-01 | Estrutura da KB da Clear IT | Define estratégia de recuperação | Produto + Engenharia |
-| Pend-02 | Tipos de logs mais frequentes | Define parsing e prompts de análise | Produto + Suporte |
-| Pend-03 | Fluxo L1 → L2/L3 | Define regra de escalonamento | Produto + Operação |
-| Pend-04 | Categorias mais frequentes | Define viabilidade de categorização | Produto + Gestão |
-| Pend-05 | Templates oficiais de resposta | Define qualidade dos rascunhos | Produto + Gestão |
-| Pend-06 | Política de mascaramento de dados | Define requisitos de segurança | Compliance + Engenharia |
-| Pend-07 | Amostra de tickets históricos | Define validação de similaridade | Operação + Engenharia |
-| Pend-08 | Critérios mínimos de confiança | Define regra de diagnóstico e escalonamento | Produto + Engenharia |
+| H-01 | A investigação inicial é uma das etapas mais demoradas do atendimento L1 | Medir tempo de triagem antes/depois da PoC ou comparar com amostra histórica | 🟡 A validar |
+| H-02 | O conhecimento reutilizável está concentrado em tickets antigos, KB, playbooks e experiência de especialistas | Amostrar tickets resolvidos e mapear recorrência, fonte usada e reaproveitamento possível | 🟡 A validar |
+| H-03 | Recomendações com evidências reduzem escalonamentos indevidos | Comparar decisões de escalar/não escalar com avaliação de L2/L3 em casos controlados | 🟡 A validar |
+| H-04 | Rascunhos padronizados reduzem esforço de comunicação e melhoram consistência | Avaliar tempo de elaboração, taxa de edição e qualidade percebida dos rascunhos | 🟡 A validar |
+| H-05 | Exibir confiança, evidências e limitações aumenta a adoção pelos analistas | Testes com usuários, entrevistas e coleta de aceito/editado/rejeitado | 🟡 A validar |
+| H-06 | Logs ou tickets incompletos exigirão solicitação recorrente de dados adicionais | Medir frequência de respostas com “contexto insuficiente” e qualidade das perguntas sugeridas | 🟡 A validar |
+
+🔵 Estas hipóteses orientam o desenho experimental da PoC. Elas não devem ser tratadas como promessas de resultado antes de baseline e validação operacional.
 
 ---
 
-# 21. Decisões de Produto
+# 13. Backlog de Épicos e Features
 
-| ID | Decisão | Justificativa |
-|---|---|---|
-| DP-01 | O Copiloto será consultivo | Reduz risco operacional e preserva decisão humana |
-| DP-02 | O foco inicial será Analista L1 | Maior impacto em triagem, MTTR/TMA e escalonamento |
-| DP-03 | A IA não substituirá o analista | Necessário para governança, qualidade e aceitação |
-| DP-04 | Conhecimento será tratado como ativo central | KB e tickets históricos são a base de valor do produto |
-| DP-05 | Evidências e fontes serão obrigatórias quando disponíveis | Aumenta confiança e auditabilidade |
-| DP-06 | Diagnóstico deve sempre indicar confiança | Evita falsa certeza |
-| DP-07 | Integração produtiva completa será pós-MVP | Reduz risco e acelera validação |
-| DP-08 | Categorização será condicional | Depende de taxonomia e dados históricos |
-| DP-09 | Escalonamento será recomendado, não executado | Mantém controle operacional com o analista |
-| DP-10 | Rascunhos sempre exigirão revisão humana | Evita comunicação incorreta ao cliente |
-
----
-
-# 22. Roadmap
-
-## Fase 1 — Descoberta e Validação
-
-- Consolidar contexto de negócio.
-- Validar dores com analistas e gestor.
-- Levantar fontes disponíveis.
-- Confirmar tipos de logs e templates oficiais.
-
-## Fase 2 — Protótipo
-
-- Criar fluxo simulado de análise de ticket.
-- Testar interpretação de logs.
-- Testar recuperação de KB/tickets com amostra.
-- Validar formato de resposta com L1.
-
-## Fase 3 — MVP
-
-- Implementar análise de logs.
-- Implementar recuperação de conhecimento.
-- Implementar diagnóstico provável com confiança.
-- Implementar rascunho de resposta.
-- Implementar recomendação de escalonamento.
-- Implementar feedback básico do analista.
-
-## Fase 4 — Validação Operacional
-
-- Medir KPIs.
-- Coletar feedback qualitativo.
-- Avaliar redução de esforço de pesquisa.
-- Ajustar critérios de confiança.
-- Priorizar backlog pós-MVP.
-
-## Fase 5 — Evolução Pós-MVP
-
-- Integração produtiva completa com FreshService.
-- Categorização automática, se validada.
-- Métricas avançadas.
-- Curadoria assistida de KB.
-- Painel gerencial.
+| ID | Épico / Feature | Status | Observação |
+|---|---|---|---|
+| E-01 | PoC consultiva do Copiloto L1 | Pronto para planejamento técnico | Escopo validado com briefing completo |
+| F-01 | Ingestão de ticket/log anonimizado | Pronto para Dev após aprovação técnica | Sem FreshService produtivo |
+| F-02 | Camada de mascaramento/sanitização | Pronto para Dev após aprovação técnica | Obrigatória antes de Claude |
+| F-03 | Busca em KB controlada/RAG | Pronto para Dev após aprovação técnica | Usar documentos autorizados |
+| F-04 | Geração de diagnóstico provável com confiança | Pronto para Dev após aprovação técnica | Baseado em evidências |
+| F-05 | Recomendação de escalonamento | Pronto para Dev após aprovação técnica | Falta de evidência/dados/confiança |
+| F-06 | Rascunho de resposta revisável | Pronto para Dev após aprovação técnica | Humano aprova |
+| F-07 | Scorecard de avaliação humana | Pronto para Dev após aprovação técnica | Aceito/editado/rejeitado |
+| F-08 | Integração FreshService API | Futuro / Condicional | Depende de credenciais, permissões e homologação |
+| F-09 | Uso automático de KB externa de fabricante | Futuro / Condicional | Pode exigir autenticação/autorização |
 
 ---
 
-# 23. Glossário
+# 14. Materiais Disponíveis para a PoC
 
-| Termo | Definição |
-|---|---|
-| KB | Knowledge Base, base de conhecimento |
-| RAG | Retrieval-Augmented Generation, geração aumentada por recuperação de fontes |
-| MTTR | Mean Time To Resolution, tempo médio até resolver |
-| TMR | Tempo Médio de Resolução |
-| TMA | Tempo Médio de Atendimento |
-| FCR | First Contact Resolution ou resolução no primeiro contato/nível |
-| SLA | Service Level Agreement, acordo de nível de serviço |
-| CSAT | Customer Satisfaction Score |
-| NPS | Net Promoter Score |
-| L1 | Suporte de primeiro nível |
-| L2/L3 | Suporte de segundo/terceiro nível |
-| FreshService | Plataforma de gestão de tickets mencionada no discovery |
-| Copiloto | IA consultiva que apoia, mas não decide nem executa ações |
+✅ O briefing informa que poderão apoiar o desenvolvimento:
 
----
+- fluxogramas do processo atual de atendimento L1 ao L3;
+- massa de dados exportada com exemplos de chamados e logs estritamente anonimizada;
+- base de conhecimento exportada;
+- playbooks;
+- artigos internos;
+- procedimentos de workaround;
+- prints do FreshService com tarjas em dados sensíveis;
+- exemplos de casos de uso de incidentes comuns.
 
-# 24. Autoavaliação do Kick-off
+🟡 O pacote `Projeto-Copiloto (4).zip` já contém uma estrutura Onion com:
 
-## Nota Geral
-
-**4.8 / 5**
-
-## Pontos Fortes
-
-- Problema de negócio claro e recorrente.
-- Personas e dores bem delimitadas.
-- MVP com escopo consultivo e seguro.
-- Critérios de aceite mais testáveis.
-- Rastreabilidade entre dores, requisitos e funcionalidades.
-- KPIs, riscos e premissas reincorporados.
-- Decisões de produto explícitas antes da engenharia.
-
-## Oportunidades de Melhoria
-
-- Validar estrutura real da KB da Clear IT.
-- Obter amostra representativa de logs e tickets.
-- Definir taxonomia oficial para categorização.
-- Confirmar templates oficiais de resposta.
-- Definir thresholds de confiança para diagnóstico e escalonamento.
-
-## Ações Corretivas
-
-- Levantar fontes reais disponíveis para o MVP.
-- Refinar requisitos técnicos de RAG no Technical Context.
-- Criar matriz de severidade e confiança.
-- Validar fluxo L1 → L2/L3 com operação.
-- Definir política mínima de LGPD e mascaramento.
+- `docs/business-context-lite.md`;
+- `docs/technical-context-lite.md`;
+- `docs/onion-cycles.md`;
+- KBs sobre Clear IT, FreshService, ITIL, processo de atendimento, análise de logs, RAG, source map, prompt engineering, vendors, runbooks e glossário;
+- templates de artigo, runbook e ticket.
 
 ---
 
-# 25. Status Final
+# 15. Pendências Atuais
 
-✅ **Produto aprovado para iniciar o Technical Context.**
+| ID | Pendência | Status | Próxima ação |
+|---|---|---|---|
+| P-01 | Provedor de IA | ✅ Respondido | Claude definido pelo usuário |
+| P-02 | Dados reais podem ser usados? | ✅ Respondido | Apenas anonimizados e em ambiente permitido |
+| P-03 | Quais dados mascarar? | 🟡 Parcial | Validar lista oficial com Clear IT |
+| P-04 | Ambiente de execução da PoC | ⚠️ Pendente | Definir ambiente homologado/controlado |
+| P-05 | Documentos de KB que entram | 🟡 Parcial | Selecionar artigos, playbooks e runbooks aprovados |
+| P-06 | KB validada e atualizada? | ⚠️ Pendente | Responsável Clear IT/Pulse Mais precisa validar |
+| P-07 | Tickets/logs usados | 🟡 Parcial | Usar massa exportada anonimizada; confirmar formato |
+| P-08 | Avaliadores técnicos | 🟡 Parcial | Definir L1/L2/L3, Pulse Mais e consultor avaliadores |
+| P-09 | Metas de aprovação | ⚠️ Pendente | Definir baseline e critérios quantitativos |
+| P-10 | Modelo/plano Claude | ⚠️ Pendente | Definir modelo, política de retenção e forma de acesso |
+| P-11 | FreshService API | 🟡 Parcial | Integração futura depende de credenciais/permissões |
+| P-12 | Uso de KB externa Nutanix/fabricantes | 🟡 Parcial | Usar só fonte pública/autorizada/exportada |
 
-## Validação de Escopo — Sprint 1
+---
 
-- **Escopo aprovado em:** 2026-06-25
-- **Aprovado por:** [ Beatriz Gadelha e ]
-- **Papel do aprovador:** [ Avaliador do Projeto, Representante do Cliente ]
-- **Status da validação:** Aprovado com ajustes menores
+# 16. Decisões de Produto
 
-### Itens dentro do escopo do MVP
+| ID | Decisão | Justificativa | Status |
+|---|---|---|---|
+| DP-01 | Priorizar PoC consultiva antes de MVP produtivo | Reduz risco e respeita restrições de acesso/dados | ✅ Confirmada |
+| DP-02 | Claude será o provedor de IA | Decisão informada pelo usuário | ✅ Confirmada |
+| DP-03 | FreshService é referência do fluxo, não integração obrigatória da PoC | Briefing restringe acesso produtivo e condiciona APIs | ✅ Confirmada |
+| DP-04 | Dados precisam ser anonimizados antes da IA | Briefing exige confidencialidade, LGPD e mascaramento | ✅ Confirmada |
+| DP-05 | Humano revisa todas as respostas | Assistente tem caráter consultivo | ✅ Confirmada |
+| DP-06 | Dois casos do briefing viram cenários prioritários | São exemplos concretos fornecidos no material | ✅ Confirmada |
+| DP-07 | Métricas quantitativas dependem de baseline | Não há números atuais no material analisado | ✅ Confirmada |
 
-- Interpretação de logs em texto
-- Recuperação de KB e tickets similares
-- Diagnóstico provável com confiança e evidências
-- Rascunho de resposta ao cliente
-- Recomendação de escalonamento
-- Solicitação de dados adicionais
-- Conformidade básica com LGPD
+---
 
-### Itens fora do escopo do MVP
+# 17. Roadmap
 
-- Execução automática de ações
-- Resposta direta ao cliente sem revisão humana
-- Integração produtiva completa com FreshService
-- Alterações em infraestrutura
-- Treinamento autônomo com dados sensíveis
-- Automação de ações corretivas
+## Fase 1 — Validação de Escopo e Dados
 
-### Restrições confirmadas
+- Confirmar ambiente de PoC.
+- Confirmar modelo/plano Claude.
+- Confirmar política de retenção e logs.
+- Selecionar documentos da KB.
+- Definir lista de dados sensíveis.
+- Receber massa anonimizada de tickets/logs.
 
-- RN-01 — Copiloto consultivo
-- RN-02 — Analista mantém a decisão final
-- RN-03 — IA não responde diretamente ao cliente
-- RN-09 — Dados sensíveis devem ser protegidos ou mascarados
-- RN-10 — Rascunhos exigem revisão humana
+## Fase 2 — PoC Consultiva
 
-### Próxima revisão
+- Implementar fluxo com entrada manual ou dataset controlado.
+- Rodar os dois casos prioritários.
+- Avaliar respostas com scorecard.
+- Ajustar prompts, guardrails e critérios de escalonamento.
 
-A próxima revisão de escopo deve ocorrer ao iniciar o Technical Context / PoC.
+## Fase 3 — MVP Consultivo
 
-## Condições para Engenharia
+- Evoluir UX.
+- Ampliar base de casos.
+- Melhorar RAG.
+- Registrar feedback humano.
+- Medir indicadores com amostra maior.
 
-O `@engineer` pode iniciar o `technical-context-lite.md`, considerando:
+## Fase 4 — Piloto Integrado Limitado
 
-- a IA deve ser consultiva;
-- a decisão final é sempre humana;
-- execução automática está fora do escopo;
-- resposta direta ao cliente sem revisão está fora do escopo;
-- integração produtiva completa com FreshService é pós-MVP;
-- RAG com fontes, confiança e evidências é essencial;
-- LGPD, segurança, mascaramento e rastreabilidade devem entrar desde o desenho técnico.
+- Avaliar integração FreshService via API.
+- Validar credenciais e permissões.
+- Testar leitura controlada e, se autorizado, escrita supervisionada.
+- Submeter a homologação de segurança.
+
+---
+
+# 18. Status Final
+
+✅ O Business Context v4.1 foi consolidado com:
+
+- briefing completo;
+- decisão de Claude;
+- escopo de PoC consultiva;
+- restrições de LGPD;
+- FreshService como referência de fluxo;
+- integração produtiva como futura;
+- dois casos de uso prioritários;
+- materiais disponíveis;
+- pendências restantes sem inventar respostas;
+- objetivos estratégicos recuperados da v3;
+- hipóteses de produto recuperadas e adaptadas para PoC;
+- critérios de sucesso objetivos para orientar validação.
 
 ## Próxima Ação Recomendada
 
-Ativar **@engineer** para criar o plano técnico inicial, cobrindo:
+Acionar `@engineer` para validar o `technical-context-lite.md` v1.3 e, somente após aprovação, iniciar plano de implementação da PoC.
 
-1. arquitetura lógica do Copiloto;
-2. estratégia de RAG para KB e tickets;
-3. fluxo de análise de logs;
-4. modelo de confiança e evidências;
-5. requisitos de segurança, LGPD e rastreabilidade;
-6. plano de implementação incremental do MVP.
+---
+
+# 19. Registro de Consolidação v4.1
+
+## Fontes consolidadas
+
+- **Base principal:** Business Context v4.
+- **Blocos recuperados da v3:** Objetivos Estratégicos, Hipóteses de Produto e Critérios de Sucesso.
+- **Diretriz de consolidação:** manter o escopo disciplinado de PoC consultiva, evitando regressão para um MVP amplo ou produtivo prematuro.
+
+## Resultado da consolidação
+
+A v4.1 passa a ser a fonte de verdade recomendada para Produto porque combina:
+
+- a precisão, segurança e concretude da v4;
+- a rastreabilidade estratégica da v3;
+- hipóteses explícitas para orientar experimentação;
+- critérios de sucesso claros para avaliação da PoC;
+- proteção contra metas numéricas inventadas sem baseline.
+
+## Quem tem a vez
+
+`@product` deve validar esta versão com stakeholders.  
+Após validação, `@engineer` pode iniciar ou revisar o `technical-context-lite.md` com base neste documento.
