@@ -29,3 +29,29 @@ coverage/
 # Temporary files
 tmp/
 temp/
+
+# Dados sensíveis / brutos
+data/raw/
+data/private/
+data/sensitive/
+
+# Dados tabulares que podem conter informação sensível
+*.xlsx
+*.xls
+*.csv
+*.tsv
+*.jsonl
+*.parquet
+
+# Variáveis de ambiente e segredos
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+
+# Bancos locais
+*.db
+*.sqlite
+*.sqlite3
