@@ -30,28 +30,34 @@ coverage/
 tmp/
 temp/
 
-# Dados sensíveis / brutos
+# Sensitive raw data
 data/raw/
 data/private/
 data/sensitive/
 
-# Dados tabulares que podem conter informação sensível
+# Sensitive spreadsheet exports
 *.xlsx
 *.xls
-*.csv
 *.tsv
 *.jsonl
 *.parquet
 
-# Variáveis de ambiente e segredos
-.env
-.env.*
-!.env.example
+# CSV policy:
+# Block CSV by default
+*.csv
+
+# Allow approved processed/anonymized CSVs
+!data/processed/
+!data/processed/*-anonimizados.csv
+!data/processed/chunks-rag.csv
+!data/processed/kb-artigos-normalizados.csv
+
+# Environment secrets and local keys
 secrets/
 *.pem
 *.key
 
-# Bancos locais
+# Local databases
 *.db
 *.sqlite
 *.sqlite3
