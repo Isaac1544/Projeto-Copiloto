@@ -29,6 +29,8 @@ coverage/
 # Temporary files
 tmp/
 temp/
+.pnpm-store/
+remote-check/
 
 # Sensitive raw data
 data/raw/

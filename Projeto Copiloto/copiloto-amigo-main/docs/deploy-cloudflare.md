@@ -1,74 +1,64 @@
 # Deploy do MVP na Cloudflare
 
-Este projeto já está configurado para buildar com alvo Cloudflare Workers via Nitro/TanStack Start.
+Este app já builda para Cloudflare Workers via TanStack Start / Nitro.
 
 ## Pré-requisitos
 
-- Conta gratuita na Cloudflare
-- Projeto Supabase já configurado
-- `.env.local` preenchido antes do build
+- conta Cloudflare
+- projeto Supabase configurado
+- `.env.local` preenchido quando o build depender de Supabase no frontend
 
-Variáveis mínimas esperadas no build local:
+## Variáveis mínimas no build
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
-- `VITE_AUTH_BYPASS=true`
-- `VITE_DEMO_MODE=false`
+- `VITE_DEMO_MODE`
+- `VITE_AUTH_BYPASS`
 
 ## Passo a passo
 
-### 1. Entrar no diretório do projeto
+### 1. Entrar na pasta do app
 
-```powershell
-cd "C:\Users\isaac\Downloads\Projeto-Copiloto (1)\Projeto Copiloto\copiloto-amigo-main"
+```bash
+cd copiloto-amigo-main
 ```
 
-### 2. Garantir Node e pnpm no PATH da sessão
+### 2. Instalar dependências
 
-```powershell
-$env:PATH="C:\Users\isaac\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin;C:\Users\isaac\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin;$env:PATH"
+```bash
+pnpm install
 ```
 
-### 3. Fazer login na Cloudflare
+Alternativa:
 
-```powershell
-& "C:\Users\isaac\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd" dlx wrangler login
+```bash
+npm install
 ```
 
-O navegador vai abrir para autorizar o deploy.
+### 3. Autenticar no Wrangler
 
-### 4. Gerar o build de produção
-
-```powershell
-& "C:\Users\isaac\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd" build
+```bash
+pnpm dlx wrangler login
 ```
 
-### 5. Publicar o app
+### 4. Gerar build de produção
 
-```powershell
-& "C:\Users\isaac\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd" dlx wrangler deploy --config .output/server/wrangler.json
+```bash
+pnpm build
 ```
 
-## Resultado esperado
+### 5. Publicar
 
-Ao final do deploy, a Cloudflare retorna uma URL parecida com:
-
-```text
-https://isaac1544-projeto-copiloto.<subdominio>.workers.dev
+```bash
+pnpm dlx wrangler deploy --config .output/server/wrangler.json
 ```
 
-Esse será o link público inicial do MVP.
+## URL pública atual conhecida
 
-## Domínio personalizado
-
-Depois do deploy:
-
-1. Abra o Worker no dashboard da Cloudflare.
-2. Vá em `Settings` ou `Domains & Routes`.
-3. Adicione um domínio personalizado.
+- [isaac1544-projeto-copiloto.copilotoisaac.workers.dev](https://isaac1544-projeto-copiloto.copilotoisaac.workers.dev)
 
 ## Observações
 
-- O frontend já está em modo público sem login.
-- As análises agora podem ser persistidas no Supabase por sessão pública do navegador.
-- Se mudar variáveis `VITE_*`, gere um novo build antes de publicar novamente.
+- se mudar qualquer variável `VITE_*`, gere novo build antes do deploy;
+- o backend de análise continua no Supabase;
+- o deploy web não substitui o deploy da Edge Function `analyze-ticket`.

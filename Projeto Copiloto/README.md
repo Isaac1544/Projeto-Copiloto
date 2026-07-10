@@ -1,49 +1,108 @@
-# Projeto Copiloto
+# Projeto Copiloto — Clear IT
 
-Repositório de documentação e especificação do **Copiloto para Analistas de Suporte**, organizado no padrão **Onion Portable / Spec-as-Code**.
+Copiloto consultivo para analistas de suporte L1, com foco em triagem, evidências, recomendação de resolução, escalonamento responsável e resposta revisável ao cliente.
 
-## Objetivo
+## Estado atual
 
-Centralizar a visão de produto, o planejamento técnico inicial e a base de conhecimento do projeto para facilitar evolução, versionamento e uso com GitHub/Copilot.
+O repositório está organizado em duas frentes:
 
-## Estrutura
+- `copiloto-amigo-main/`: aplicação web principal do MVP.
+- `docs/`, `data/` e `docs/knowledge-base/`: contexto de negócio, contexto técnico, backlog, corpus curado e dados anonimizados de apoio.
+
+O MVP já permite:
+
+- abrir o fluxo principal sem login, em modo público;
+- registrar atendimentos manualmente;
+- gerar análise server-side via Supabase Edge Function;
+- recuperar evidências curadas da base de conhecimento;
+- separar fatos observados, identificação do problema, sugestão de resolução e resposta ao cliente;
+- registrar decisão humana e scorecard operacional;
+- consultar histórico e métricas do uso.
+
+## Links atuais
+
+- Deploy público atual: [isaac1544-projeto-copiloto.copilotoisaac.workers.dev](https://isaac1544-projeto-copiloto.copilotoisaac.workers.dev)
+- Deploy legado do Lovable: [copiloto-amigo.lovable.app](https://copiloto-amigo.lovable.app)
+
+## Arquitetura resumida
+
+```text
+Frontend TanStack Start / React
+        ↓
+Supabase Auth / sessão pública controlada
+        ↓
+Supabase Edge Function analyze-ticket
+        ↓
+LLM_PROVIDER = anthropic | openai | gemini
+        ↓
+Supabase Postgres + trilha de decisão humana
+```
+
+Observações:
+
+- o modelo nunca é chamado diretamente do navegador;
+- a escolha do provedor fica no Supabase via `LLM_PROVIDER`;
+- a recomendação atual do MVP continua sendo Anthropic / Claude, mas o backend já suporta OpenAI e Gemini;
+- `data/raw/` está fora do versionamento e não deve ser compartilhado.
+
+## Modos de uso
+
+### Demonstração
+
+Usado quando o time quer navegar rapidamente, sem depender de Supabase configurado no frontend.
+
+### Acesso público
+
+Usado quando o app precisa ficar acessível com backend real, mas sem exigir login durante a validação do MVP.
+
+### Conectado
+
+Usado quando o fluxo completo com autenticação Supabase precisa ser validado.
+
+## Estrutura do repositório
 
 ```text
 Projeto Copiloto/
 ├── README.md
-├── .gitignore
 ├── ONION-MASTER-PROMPT.md
+├── copiloto-amigo-main/
+├── data/
+│   ├── processed/
+│   └── raw/
 └── docs/
+    ├── backlog-operacional-mvp.md
     ├── business-context-lite.md
+    ├── domain-model-mvp.md
+    ├── knowledge-corpus-mvp.md
+    ├── operacao-versionamento-mvp.md
+    ├── security-pipeline-mvp.md
+    ├── setup-local-copiloto.md
     ├── technical-context-lite.md
-    ├── onion-cycles.md
     ├── knowledge-base/
     └── sessions/
-        └── README.md
 ```
 
 ## Documentos principais
 
-- `docs/business-context-lite.md` — contexto de negócio ativo do projeto.
-- `docs/technical-context-lite.md` — contexto técnico em template, ainda não preenchido.
-- `docs/onion-cycles.md` — ciclos de Produto, Engenharia, Knowledge Base e Sync.
-- `docs/knowledge-base/` — base de conhecimento consolidada.
-- `docs/sessions/README.md` — índice para registrar sessões futuras.
-- `ONION-MASTER-PROMPT.md` — prompt mestre do Onion Portable para orientar agentes de IA.
+- Negócio: [docs/business-context-lite.md](docs/business-context-lite.md)
+- Técnico: [docs/technical-context-lite.md](docs/technical-context-lite.md)
+- Backlog operacional: [docs/backlog-operacional-mvp.md](docs/backlog-operacional-mvp.md)
+- Modelo de domínio: [docs/domain-model-mvp.md](docs/domain-model-mvp.md)
+- Corpus e RAG: [docs/knowledge-corpus-mvp.md](docs/knowledge-corpus-mvp.md)
+- Segurança e LGPD: [docs/security-pipeline-mvp.md](docs/security-pipeline-mvp.md)
+- Setup local: [docs/setup-local-copiloto.md](docs/setup-local-copiloto.md)
+- Operação e versionamento: [docs/operacao-versionamento-mvp.md](docs/operacao-versionamento-mvp.md)
+- Deploy Cloudflare: [copiloto-amigo-main/docs/deploy-cloudflare.md](copiloto-amigo-main/docs/deploy-cloudflare.md)
 
-## Como subir no GitHub
+## Onde mexer em cada tipo de mudança
 
-```bash
-git init
-git add .
-git commit -m "Initial commit - Projeto Copiloto"
-git branch -M main
-git remote add origin <URL_DO_SEU_REPOSITORIO>
-git push -u origin main
-```
+- fluxo, telas, backend do app e integração Supabase: `copiloto-amigo-main/`
+- decisões de produto, backlog e operação: `docs/`
+- corpus aprovado e dados anonimizados: `data/processed/` e `docs/knowledge-base/`
 
-## Observações
+## Regras de segurança
 
-- O arquivo `business-context-v3-desafio-b.md` foi consolidado como `docs/business-context-lite.md`.
-- O `technical-context-lite.md` foi mantido sem preenchimento técnico, conforme solicitado.
-- Arquivos duplicados e opcionais foram removidos para deixar o repositório mais limpo.
+- nunca versionar `.env`, chaves, tokens ou segredos;
+- nunca versionar `data/raw/`;
+- só manter em `data/processed/` material anonimizado e aprovado;
+- toda análise gerada por IA exige revisão humana antes de qualquer comunicação final.

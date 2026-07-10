@@ -1,809 +1,267 @@
 # Technical Context — Copiloto para Analistas de Suporte L1 Clear IT
 
-> **Versão:** v1.5 — Contexto técnico completo consolidado  
-> **Data:** 2026-07-04  
-> **Persona Onion responsável:** `@engineer` com sincronismo `@docs`  
-> **Projeto:** Copiloto de IA para Analistas de Suporte L1 — Clear IT  
-> **Fase atual:** PoC simples criada / validação pré-MVP  
-> **Próxima fase:** MVP sem integração direta ao FreshService  
-> **Regra Onion:** Nenhum código produtivo antes de plano técnico aprovado.
+> Versão: v3.0  
+> Data: 2026-07-10  
+> Responsável: `@engineer`  
+> Estado atual: MVP funcional com frontend publicado, Edge Function ativa, sessão pública controlada e documentação sincronizada com o código  
+> Próximo foco técnico: consolidar corpus persistido, validar operação com provedor escolhido e reduzir dívida de organização entre UI, contrato e banco
 
----
+## 1. Resumo executivo
 
-## 1. Resumo Técnico Executivo
+O projeto já não está mais em fase apenas conceitual. Hoje existe uma aplicação funcional em `copiloto-amigo-main/`, publicada em Cloudflare Workers, com backend de análise no Supabase e fluxo principal do analista utilizável.
 
-Este documento define o contexto técnico atualizado para o Copiloto Clear IT.
+O objetivo técnico do MVP é:
 
-A direção atual é:
+1. receber um chamado manualmente;
+2. sanitizar a entrada antes da IA;
+3. recuperar evidências curadas;
+4. gerar uma recomendação estruturada server-side;
+5. expor o resultado para revisão humana;
+6. registrar decisão e scorecard operacional.
 
-1. validar a PoC simples já criada;
-2. usar os aprendizados para planejar o MVP;
-3. implementar o MVP sem integração com FreshService neste momento;
-4. usar Claude como provedor de IA;
-5. trabalhar apenas com entrada manual ou importação controlada;
-6. processar somente dados anonimizados;
-7. consultar KB controlada;
-8. produzir diagnóstico, evidências, confiança, escalonamento e rascunho;
-9. manter revisão humana obrigatória;
-10. deixar integração FreshService como etapa futura pós-MVP.
-
----
-
-## 2. Stack Tecnológica
-
-### 2.1 Decisões confirmadas
-
-| Item | Decisão |
-|---|---|
-| Provedor de IA | Claude |
-| FreshService | Fora da arquitetura do MVP atual |
-| Tipo de solução MVP | Aplicação controlada, sem integração produtiva |
-| Dados de entrada | Manual ou importação controlada de conteúdo anonimizado |
-| Revisão humana | Obrigatória |
-| Envio automático ao cliente | Fora do escopo |
-| Acesso produtivo Clear IT | Fora do escopo atual |
-
-### 2.2 Ainda não decidido
-
-| Item | Status |
-|---|---|
-| Linguagem de programação | Pendente |
-| Framework frontend | Pendente |
-| Framework backend | Pendente |
-| Banco de dados | Pendente |
-| Banco vetorial | Pendente |
-| Modelo Claude específico | Pendente |
-| Estratégia de embeddings | Pendente |
-| Cloud/deploy | Pendente |
-| Autenticação | Pendente |
-| Observabilidade | Pendente |
-| Política de retenção | Pendente |
-
-### 2.3 Observação Onion
-
-A PoC HTML simples foi gerada como artefato de validação. Ela não define a stack final do MVP. Ela apenas prova fluxo.
-
----
-
-## 3. PoC Simples Criada
-
-### 3.1 Objetivo
-
-A PoC simples valida o fluxo mínimo antes do MVP:
+## 2. Estrutura atual do repositório
 
 ```text
-Ticket/log
-↓
-Mascaramento básico
-↓
-Extração de sinais técnicos
-↓
-Busca simulada em KB
-↓
-Diagnóstico provável
-↓
-Confiança
-↓
-Escalonamento
-↓
-Rascunho revisável
-↓
-Scorecard humano
-```
-
-### 3.2 Arquivos gerados na PoC
-
-```text
-poc-copiloto-clear-it/
+Projeto Copiloto/
 ├── README.md
-├── poc-copiloto-clear-it.html
+├── ONION-MASTER-PROMPT.md
+├── copiloto-amigo-main/
+│   ├── docs/
+│   ├── public/
+│   ├── scripts/
+│   ├── src/
+│   └── supabase/
 ├── data/
-│   ├── test-cases.json
-│   └── scorecard-avaliacao.csv
+│   ├── processed/
+│   └── raw/
 └── docs/
-    └── next-mvp-notes.md
-```
-
-### 3.3 O que a PoC implementa
-
-- UI local em HTML;
-- seleção de cenário;
-- entrada manual;
-- mascaramento básico em JavaScript;
-- extração simples de sinais;
-- busca simulada em KB embutida;
-- diagnóstico provável;
-- confiança;
-- recomendação de escalonamento;
-- rascunho de resposta;
-- scorecard humano.
-
-### 3.4 O que a PoC não implementa
-
-- Claude real;
-- FreshService;
-- backend;
-- banco;
-- RAG real;
-- autenticação;
-- auditoria real;
-- persistência;
-- deploy;
-- dados produtivos.
-
----
-
-## 4. Arquitetura Lógica Planejada para o MVP
-
-### 4.1 Arquitetura sem FreshService
-
-```text
-[Analista L1]
-    |
-    v
-[Web UI do MVP]
-    |
-    v
-[Input Validator]
-    |
-    v
-[Data Sanitization Layer]
-    |
-    v
-[Technical Signal Extractor]
-    |
-    v
-[Retrieval / RAG Layer]
-    |
-    v
-[Claude Inference Adapter]
-    |
-    v
-[Guardrails & Confidence Evaluator]
-    |
-    v
-[Human Review Workspace]
-    |
-    v
-[Feedback & Audit Log]
-```
-
-### 4.2 Característica principal
-
-O MVP não deve depender de FreshService.
-
-O usuário poderá inserir manualmente o conteúdo de um ticket/log ou importar uma amostra controlada, desde que anonimizada ou submetida ao processo de sanitização.
-
----
-
-## 5. Componentes Técnicos Planejados
-
-### 5.1 Web UI do MVP
-
-Responsável por permitir que o analista:
-
-- cole texto do chamado;
-- cole logs;
-- envie arquivo controlado, se aprovado;
-- visualize dados mascarados;
-- veja evidências;
-- revise diagnóstico;
-- revise rascunho;
-- registre avaliação.
-
-Status: pendente.
-
----
-
-### 5.2 Input Validator
-
-Responsável por validar:
-
-- tamanho da entrada;
-- tipo de arquivo;
-- formato mínimo;
-- presença de conteúdo;
-- possível presença de dados sensíveis;
-- conteúdo inadequado para processamento.
-
-Status: pendente.
-
----
-
-### 5.3 Data Sanitization Layer
-
-Responsável por remover ou mascarar:
-
-- nomes de clientes;
-- nomes de pessoas;
-- e-mails;
-- telefones;
-- IPs identificáveis;
-- hostnames;
-- IDs de contrato;
-- IDs de cliente;
-- tokens;
-- chaves;
-- segredos;
-- topologia de rede identificável;
-- caminhos internos sensíveis.
-
-Status: pendente.
-
-Observação: a lista final precisa ser validada com Clear IT/Pulse Mais.
-
----
-
-### 5.4 Technical Signal Extractor
-
-Responsável por identificar sinais técnicos como:
-
-- produto/serviço impactado;
-- severidade;
-- tipo de erro;
-- componente afetado;
-- termos técnicos relevantes;
-- sintomas;
-- padrões de log;
-- necessidade de mais dados.
-
-Status: pendente.
-
----
-
-### 5.5 Retrieval / RAG Layer
-
-Responsável por recuperar evidências em KB controlada.
-
-Fontes candidatas:
-
-- KB exportada;
-- playbooks;
-- artigos internos;
-- procedimentos de workaround;
-- casos históricos anonimizados;
-- documentos autorizados de fabricantes;
-- runbooks derivados dos casos de uso.
-
-Status: pendente.
-
-Questões em aberto:
-
-- formato da KB;
-- estratégia de chunking;
-- embeddings;
-- banco vetorial;
-- ranking;
-- filtro por fonte;
-- atualização da base;
-- validação de artigos.
-
----
-
-### 5.6 Claude Inference Adapter
-
-Responsável por encapsular chamadas ao Claude.
-
-Deve garantir:
-
-- envio apenas de conteúdo sanitizado;
-- prompts controlados;
-- instruções de não inventar;
-- separação entre fato, hipótese e recomendação;
-- retorno estruturado;
-- tratamento de erro;
-- política de timeout;
-- logs seguros.
-
-Status: pendente.
-
-Ainda não definido:
-
-- modelo Claude específico;
-- API/plano;
-- credenciais;
-- retenção;
-- região;
-- limites de custo;
-- limites de tokens.
-
----
-
-### 5.7 Guardrails & Confidence Evaluator
-
-Responsável por aplicar regras antes e depois da resposta do Claude.
-
-Deve avaliar:
-
-- evidência suficiente;
-- confiança;
-- necessidade de mais dados;
-- necessidade de escalonamento;
-- risco de resposta sem fonte;
-- presença de dados sensíveis;
-- aderência ao formato.
-
-Status: pendente.
-
----
-
-### 5.8 Human Review Workspace
-
-Responsável por permitir revisão humana.
-
-Deve exibir:
-
-- entrada original ou sanitizada;
-- resumo do incidente;
-- evidências;
-- diagnóstico provável;
-- confiança;
-- recomendação;
-- rascunho;
-- botões ou campos de avaliação.
-
-Status: pendente.
-
----
-
-### 5.9 Feedback & Audit Log
-
-Responsável por registrar:
-
-- caso analisado;
-- versão sanitizada;
-- fontes usadas;
-- saída gerada;
-- avaliação humana;
-- se aceitou/editou/rejeitou;
-- motivo da rejeição;
-- timestamp;
-- usuário avaliador, se houver autenticação.
-
-Status: pendente.
-
-Cuidado: logs não podem armazenar dados sensíveis indevidamente.
-
----
-
-## 6. FreshService — Fora do MVP Atual
-
-### 6.1 O que foi decidido
-
-O MVP atual **não será integrado ao FreshService**.
-
-### 6.2 O que isso significa tecnicamente
-
-O MVP não deve:
-
-- autenticar no FreshService;
-- ler tickets via API;
-- escrever comentários;
-- alterar status;
-- enviar respostas;
-- buscar anexos;
-- sincronizar categorias;
-- abrir ou fechar chamados.
-
-### 6.3 O que FreshService ainda representa
-
-FreshService continua sendo:
-
-- referência do processo real;
-- referência de campos de ticket;
-- referência para exemplos de entrada;
-- sistema futuro potencial;
-- origem provável de dados exportados e anonimizados;
-- contexto de operação do analista.
-
-### 6.4 Por que deixar fora agora
-
-- reduz risco;
-- reduz dependência de credenciais;
-- evita acesso produtivo;
-- respeita restrições do briefing;
-- permite validar valor antes de integração;
-- acelera planejamento do MVP;
-- mantém escopo adequado para jovens/squad.
-
----
-
-## 7. Contrato Conceitual de Entrada do MVP
-
-Exemplo conceitual:
-
-```json
-{
-  "case_id": "CASE-001",
-  "source": "manual_input",
-  "ticket_summary": "Resumo do incidente",
-  "log_excerpt": "Trecho de log sanitizado",
-  "attachments_summary": "Descrição opcional de anexos",
-  "severity": "unknown | low | medium | high",
-  "customer_visible": false,
-  "sanitization_status": "pending | sanitized | blocked"
-}
-```
-
-Observação: contrato final depende da stack e do formato real dos dados.
-
----
-
-## 8. Contrato Conceitual de Saída do MVP
-
-Exemplo conceitual:
-
-```json
-{
-  "case_summary": "Resumo do incidente",
-  "technical_signals": ["sinal 1", "sinal 2"],
-  "evidence": [
-    {
-      "source_id": "KB-001",
-      "title": "Artigo ou playbook",
-      "relevance": "high"
-    }
-  ],
-  "probable_diagnosis": "Diagnóstico provável",
-  "confidence": "high | medium | low",
-  "recommendation": "resolve | ask_more_data | escalate",
-  "escalation_reason": "Motivo se aplicável",
-  "customer_draft": "Rascunho revisável",
-  "human_review_required": true
-}
-```
-
----
-
-## 9. Regras de Prompt para Claude
-
-O prompt do MVP deve orientar Claude a:
-
-1. não inventar diagnóstico;
-2. responder apenas com base em evidências;
-3. declarar incerteza;
-4. separar fatos de hipóteses;
-5. recomendar pedir mais dados quando necessário;
-6. recomendar escalonamento quando risco ou baixa confiança;
-7. não expor dados sensíveis;
-8. não gerar instruções perigosas;
-9. não afirmar execução de ações;
-10. gerar rascunho revisável;
-11. respeitar padrão consultivo.
-
-### Estrutura esperada da resposta
-
-```text
-Resumo do caso
-Sinais técnicos encontrados
-Evidências consultadas
-Diagnóstico provável
-Nível de confiança
-Próximos passos
-Recomendação de escalonamento
-Rascunho para cliente
-Observações para revisão humana
-```
-
----
-
-## 10. Política Técnica Inicial de Dados
-
-### 10.1 Antes do Claude
-
-Todo conteúdo deve passar por sanitização.
-
-### 10.2 Dados a mascarar ou bloquear
-
-| Categoria | Tratamento inicial |
-|---|---|
-| Nome de cliente | Mascarar |
-| Nome de pessoa | Mascarar |
-| E-mail | Mascarar |
-| Telefone | Mascarar |
-| IP identificável | Mascarar/generalizar |
-| Hostname | Mascarar |
-| ID de cliente | Mascarar |
-| ID de contrato | Mascarar |
-| Token/chave/segredo | Bloquear |
-| Topologia identificável | Remover ou abstrair |
-| Print com dados sensíveis | Usar apenas se tarjado |
-
-### 10.3 Pendência
-
-A lista oficial de dados sensíveis da Clear IT ainda precisa ser validada.
-
----
-
-## 11. Regras de Confiança
-
-### Alta
-
-- evidência clara na KB;
-- sinais técnicos consistentes;
-- caso semelhante conhecido;
-- próximo passo seguro;
-- baixa ambiguidade.
-
-### Média
-
-- há evidência parcial;
-- alguns sinais técnicos são compatíveis;
-- requer validação humana;
-- pode precisar de dados adicionais.
-
-### Baixa
-
-- log incompleto;
-- sem evidência na KB;
-- múltiplas hipóteses;
-- risco alto;
-- dados insuficientes;
-- recomendação deve ser pedir mais dados ou escalar.
-
----
-
-## 12. Regras de Escalonamento
-
-O MVP deve recomendar escalonamento quando:
-
-- confiança baixa;
-- evidência insuficiente;
-- risco operacional alto;
-- possível impacto em cluster/infraestrutura crítica;
-- necessidade de intervenção física;
-- necessidade de confirmação L2/L3;
-- log incompleto;
-- workaround não validado;
-- caso fora da KB;
-- resposta ao cliente exigiria afirmação não comprovada.
-
----
-
-## 13. Plano Técnico Ativo — MVP Sem FreshService
-
-### Etapa 0 — Validar PoC simples
-
-- Abrir PoC HTML.
-- Testar 3 cenários.
-- Coletar avaliação no scorecard.
-- Registrar pontos úteis e falhas.
-- Decidir se segue para MVP.
-
-Status: pronta para execução.
-
----
-
-### Etapa 1 — Fechar escopo MVP
-
-- Confirmar formato de entrada.
-- Confirmar KB inicial.
-- Confirmar política de dados.
-- Confirmar avaliadores.
-- Confirmar critérios de sucesso.
-- Confirmar modelo/acesso Claude.
-
-Status: pendente.
-
----
-
-### Etapa 2 — Definir arquitetura técnica
-
-- Escolher stack.
-- Escolher estratégia de RAG.
-- Escolher armazenamento.
-- Definir ambiente.
-- Definir autenticação, se houver.
-- Definir logs e auditoria.
-
-Status: pendente.
-
----
-
-### Etapa 3 — Implementar MVP incremental
-
-Ordem sugerida:
-
-1. UI de entrada.
-2. Sanitização.
-3. KB local/controlada.
-4. Recuperação de evidências.
-5. Integração Claude.
-6. Guardrails.
-7. Resultado estruturado.
-8. Scorecard humano.
-9. Auditoria básica.
-10. Testes com casos controlados.
-
-Status: pendente.
-
----
-
-### Etapa 4 — Avaliação
-
-- Testar com amostra controlada.
-- Comparar respostas com avaliação humana.
-- Medir utilidade.
-- Medir segurança.
-- Medir rastreabilidade.
-- Medir esforço reduzido percebido.
-- Registrar pontos para evolução.
-
-Status: pendente.
-
----
-
-### Etapa 5 — Pós-MVP
-
-Somente depois do MVP validado, discutir:
-
-- integração FreshService;
-- API;
-- autenticação;
-- leitura de tickets;
-- comentários;
-- anexos;
-- métricas operacionais reais;
-- implantação controlada.
-
-Status: futuro.
-
----
-
-## 14. Critérios Técnicos de Aceite do MVP
-
-### TC-001 — Sem FreshService
-
-O sistema deve funcionar sem qualquer chamada a FreshService.
-
-### TC-002 — Sanitização antes de IA
-
-Nenhuma chamada a Claude pode ocorrer antes da etapa de sanitização.
-
-### TC-003 — Bloqueio de segredo
-
-Se tokens, chaves ou credenciais forem detectados, o sistema deve bloquear o envio.
-
-### TC-004 — Evidência obrigatória
-
-Toda resposta deve listar evidências usadas ou declarar ausência de evidência.
-
-### TC-005 — Incerteza explícita
-
-Quando a confiança for baixa, o sistema deve pedir mais dados ou escalar.
-
-### TC-006 — Rascunho não automático
-
-Resposta ao cliente deve ser rascunho revisável, sem envio automático.
-
-### TC-007 — Feedback humano
-
-O usuário deve conseguir avaliar a resposta.
-
-### TC-008 — Auditoria segura
-
-O sistema deve registrar uso de forma segura, sem expor dados sensíveis.
-
----
-
-## 15. Riscos Técnicos
-
-| Risco | Impacto | Mitigação |
-|---|---|---|
-| Claude receber dado sensível | Alto | Sanitização obrigatória e bloqueio. |
-| Diagnóstico inventado | Alto | Guardrails, evidências e baixa confiança. |
-| KB desatualizada | Médio/Alto | Validação da KB antes do MVP. |
-| Falta de baseline | Médio | MVP mede utilidade antes de prometer redução. |
-| Escopo crescer para FreshService | Alto | Manter integração fora do MVP. |
-| Dados exportados inconsistentes | Médio | Normalização e validação de entrada. |
-| Resposta inadequada ao cliente | Médio | Rascunho sempre revisável. |
-| Custo/limite Claude indefinido | Médio | Definir modelo e limites antes da implementação. |
-
----
-
-## 16. Pendências Técnicas
-
-| ID | Pendência | Status |
-|---|---|---|
-| P-TECH-001 | Modelo Claude específico | Pendente |
-| P-TECH-002 | Forma de acesso/API Claude | Pendente |
-| P-TECH-003 | Política de retenção Claude | Pendente |
-| P-TECH-004 | Stack MVP | Pendente |
-| P-TECH-005 | Banco ou armazenamento | Pendente |
-| P-TECH-006 | Banco vetorial/embeddings | Pendente |
-| P-TECH-007 | Ambiente de execução | Pendente |
-| P-TECH-008 | Autenticação | Pendente |
-| P-TECH-009 | Política de logs | Pendente |
-| P-TECH-010 | KB aprovada para indexação | Pendente |
-| P-TECH-011 | Formato de entrada | Pendente |
-| P-TECH-012 | Lista oficial de dados sensíveis | Pendente |
-| P-TECH-013 | Critério técnico de sucesso do MVP | Pendente |
-| P-TECH-014 | Plano de testes | Pendente |
-
----
-
-## 17. Fora de Escopo Técnico Atual
-
-### Fora da PoC
-
-- backend;
-- Claude real;
-- RAG real;
-- FreshService;
-- deploy;
-- autenticação;
-- persistência.
-
-### Fora do MVP
-
-- integração FreshService;
-- escrita em tickets;
-- leitura automática;
-- envio automático;
-- execução de comandos;
-- acesso produtivo;
-- scraping não autorizado;
-- dados reais não anonimizados.
-
----
-
-## 18. Arquivos de Referência
-
-Arquivos gerados ou usados no ciclo:
-
-```text
-poc-copiloto-clear-it/
-├── README.md
-├── poc-copiloto-clear-it.html
-├── data/test-cases.json
-├── data/scorecard-avaliacao.csv
-└── docs/next-mvp-notes.md
-
-onion-contexts-poc-mvp-sem-freshservice/
-└── docs/
+    ├── backlog-operacional-mvp.md
     ├── business-context-lite.md
-    └── technical-context-lite.md
+    ├── domain-model-mvp.md
+    ├── knowledge-corpus-mvp.md
+    ├── operacao-versionamento-mvp.md
+    ├── security-pipeline-mvp.md
+    ├── setup-local-copiloto.md
+    ├── technical-context-lite.md
+    ├── knowledge-base/
+    └── sessions/
 ```
 
----
+Decisão prática:
 
-## 19. Próxima Ação Recomendada
+- a pasta principal de desenvolvimento do produto é `copiloto-amigo-main/`;
+- a raiz do repositório concentra documentação, corpus e governança do MVP;
+- `data/raw/` permanece local e fora do Git;
+- `data/processed/` pode ser versionado apenas com material anonimizado e aprovado.
 
-A próxima ação Onion é:
+## 3. Estado atual do app
+
+O app já entrega:
+
+- frontend em React + TypeScript sobre TanStack Start;
+- build com Vite/Nitro para Cloudflare Workers;
+- modo demonstração;
+- modo público sem login bloqueante;
+- modo conectado com Supabase;
+- dashboard;
+- novo atendimento;
+- resultado da análise;
+- histórico;
+- persistência de análises;
+- persistência de decisão humana;
+- scorecard operacional;
+- Edge Function `analyze-ticket`;
+- recuperação mínima de evidências curadas;
+- fallback controlado quando o provedor não está disponível.
+
+Ainda falta consolidar:
+
+- corpus persistido em banco para KB/RAG;
+- alinhamento completo entre modelo de tela, contrato e banco;
+- revisão mais forte da sanitização antes da persistência;
+- validação operacional estável do provedor definitivo em produção;
+- suíte de testes automatizados além do `verify:mvp`.
+
+## 4. Stack técnica confirmada
+
+| Camada | Decisão atual |
+|---|---|
+| Frontend | React + TypeScript |
+| Framework app | TanStack Start |
+| Build | Vite |
+| Deploy web | Cloudflare Workers |
+| UI | Tailwind + componentes gerados pelo stack do Lovable |
+| Backend de análise | Supabase Edge Functions |
+| Banco | Supabase Postgres |
+| Sessão/Auth | Supabase Auth e modo público controlado |
+| Provedor de IA | Seleção por `LLM_PROVIDER` |
+| Provedores suportados | `anthropic`, `openai`, `gemini` |
+
+## 5. Arquitetura lógica
 
 ```text
-@engineer plan MVP sem FreshService
+Analista
+  ↓
+Frontend web
+  ↓
+Modo de execução:
+  - Demonstração
+  - Acesso público
+  - Conectado
+  ↓
+Supabase Edge Function analyze-ticket
+  ↓
+Sanitização + regras de bloqueio
+  ↓
+Recuperação de evidências curadas
+  ↓
+LLM provider configurado no Supabase
+  ↓
+Resposta estruturada
+  ↓
+Persistência + decisão humana + scorecard
 ```
 
-Esse plano deve detalhar:
+## 6. Modos de execução
 
-- arquitetura escolhida;
-- arquivos a criar;
-- ordem de implementação;
-- critérios de teste;
-- riscos;
-- validações;
-- o que ainda precisa de aprovação.
+### 6.1 Demonstração
 
-Não iniciar código produtivo antes dessa aprovação.
+Ativado quando:
 
----
+- `VITE_DEMO_MODE=true`; ou
+- o frontend não tem `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`.
 
-## 20. Controle Anti-Alucinação
+Comportamento:
 
-Este documento não inventa:
+- sem dependência de Supabase no frontend;
+- persistência local no navegador;
+- útil para UX, apresentação e fluxo básico.
 
-- linguagem;
-- framework;
-- banco;
-- cloud;
-- embeddings;
-- modelo Claude;
-- custos;
-- API keys;
-- endpoints FreshService;
-- metas numéricas;
-- credenciais;
-- baselines.
+### 6.2 Acesso público
 
-Tudo que não está validado permanece como pendência.
+Ativado quando:
+
+- Supabase está configurado; e
+- `VITE_AUTH_BYPASS=true`.
+
+Comportamento:
+
+- app acessível sem login bloqueante;
+- backend real continua ativo;
+- útil para acelerar validação do MVP.
+
+### 6.3 Conectado
+
+Ativado quando:
+
+- Supabase está configurado; e
+- `VITE_DEMO_MODE=false`; e
+- `VITE_AUTH_BYPASS=false`.
+
+Comportamento:
+
+- fluxo com autenticação real;
+- persistência real por usuário;
+- adequado para etapa posterior de endurecimento operacional.
+
+## 7. Contrato técnico atual
+
+O contrato canônico entre frontend e `analyze-ticket` hoje é enxuto:
+
+```ts
+type AnalyzeTicketInput = {
+  title: string;
+  description: string;
+  category: string;
+  priority: string;
+  additionalContext?: string;
+}
+```
+
+Observação importante:
+
+- a UI já trabalha com campos mais ricos de operação;
+- parte desses campos hoje é consolidada em `category`, `priority` e `additionalContext`;
+- isso funciona para o MVP, mas ainda é um ponto técnico a evoluir.
+
+## 8. Backend de análise
+
+Arquivo principal:
+
+- `copiloto-amigo-main/supabase/functions/analyze-ticket/index.ts`
+
+A função já implementa:
+
+- validação de payload;
+- bloqueio de segredo, senha, token e chave;
+- mascaramento básico de e-mail, CPF e telefone;
+- seleção de provedor por `LLM_PROVIDER`;
+- compatibilidade com Anthropic, OpenAI e Gemini;
+- timeout defensivo;
+- fallback controlado quando `ALLOW_MOCK_ANALYSIS=true`;
+- validação do formato de resposta do modelo.
+
+Variáveis de backend relevantes:
+
+- `LLM_PROVIDER`
+- `ALLOW_MOCK_ANALYSIS`
+- `ANTHROPIC_API_KEY`
+- `ANTHROPIC_MODEL`
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL`
+- `GEMINI_API_KEY`
+- `GEMINI_MODEL`
+
+## 9. Persistência e estado
+
+O MVP já persiste:
+
+- análises;
+- fontes consultadas;
+- decisões humanas;
+- scorecard operacional.
+
+Também existe suporte a armazenamento público/local para o modo sem login, permitindo navegação rápida mesmo antes de autenticação formal.
+
+## 10. Deploy atual
+
+Estado conhecido do deploy web:
+
+- URL pública principal: [isaac1544-projeto-copiloto.copilotoisaac.workers.dev](https://isaac1544-projeto-copiloto.copilotoisaac.workers.dev)
+- origem do frontend: build de `copiloto-amigo-main/`
+- destino: Cloudflare Workers via saída Nitro/TanStack Start
+
+Estado conhecido do backend:
+
+- projeto Supabase vinculado ao workspace;
+- Edge Function `analyze-ticket` já publicada ao menos para uso do MVP;
+- comportamento final depende dos secrets ativos no ambiente remoto.
+
+## 11. Riscos técnicos atuais
+
+1. O modelo de domínio da UI ainda é mais rico do que o contrato canônico do backend.
+2. O corpus de evidências ainda é mínimo e não persistido como base operacional robusta.
+3. A sanitização atual cobre o essencial, mas não fecha toda a política LGPD do produto.
+4. O modo público acelera o MVP, mas não substitui a futura validação com autenticação forte.
+5. Parte da documentação anterior estava com caminhos locais e precisava ser normalizada para GitHub.
+
+## 12. Prioridades técnicas imediatas
+
+1. consolidar o corpus inicial em estrutura persistida;
+2. alinhar contrato de análise, modelo de tela e schema do banco;
+3. decidir e estabilizar o provedor principal de IA para o ambiente produtivo controlado;
+4. fortalecer a trilha de sanitização antes da persistência e da análise;
+5. reduzir dívida operacional de docs, setup e versionamento.
+
+## 13. Decisões técnicas registradas
+
+| ID | Decisão | Status |
+|---|---|---|
+| TD-01 | O app principal do MVP fica em `copiloto-amigo-main/` | Confirmada |
+| TD-02 | O backend de análise roda em Supabase Edge Functions | Confirmada |
+| TD-03 | O frontend público do MVP roda em Cloudflare Workers | Confirmada |
+| TD-04 | O navegador nunca fala direto com o provedor de IA | Confirmada |
+| TD-05 | O provedor é selecionado via `LLM_PROVIDER` | Confirmada |
+| TD-06 | Anthropic/Claude segue como caminho preferencial do MVP, sem bloquear fallback para OpenAI ou Gemini | Confirmada |
+| TD-07 | `data/raw/` não entra em Git | Confirmada |
+| TD-08 | O MVP pode operar temporariamente sem login via `VITE_AUTH_BYPASS=true` | Confirmada |
