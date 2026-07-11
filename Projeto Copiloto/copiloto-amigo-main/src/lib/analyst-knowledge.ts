@@ -86,6 +86,19 @@ function extractExcerpt(content: string) {
   return compact.length <= 240 ? compact : `${compact.slice(0, 237).trimEnd()}...`;
 }
 
+function looksLikeLowSignalMetadataLine(line: string) {
+  const normalized = normalize(line);
+  return /^(categoria|subcategoria|tipo|prioridade|urgencia|empresa|grupo|origem|agente anterior|status|hora da criacao|ticket original):/.test(
+    normalized,
+  );
+}
+
+function stripKnownLabel(line: string) {
+  return line
+    .replace(/^(Titulo|Título|Descricao|Descrição|Resolucao anterior|Resolução anterior):\s*/i, "")
+    .trim();
+}
+
 function extractGuidance(content: string) {
   const lines = content
     .split(/\r?\n/)
@@ -95,16 +108,28 @@ function extractGuidance(content: string) {
   const bulletLines = lines
     .filter((line) => /^[-*•]/.test(line) || /^\d+[.)]/.test(line))
     .map((line) => line.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim())
-    .filter((line) => line.length >= 12);
+    .filter((line) => line.length >= 12)
+    .map((line) => (line.length <= 180 ? line : `${line.slice(0, 177).trimEnd()}...`));
 
   if (bulletLines.length > 0) {
     return bulletLines.slice(0, 3);
+  }
+
+  const descriptiveLines = lines
+    .filter((line) => !looksLikeLowSignalMetadataLine(line))
+    .map(stripKnownLabel)
+    .filter((line) => line.length >= 20)
+    .map((line) => (line.length <= 180 ? line : `${line.slice(0, 177).trimEnd()}...`));
+
+  if (descriptiveLines.length > 0) {
+    return descriptiveLines.slice(0, 3);
   }
 
   return content
     .split(/(?<=[.!?])\s+/)
     .map((sentence) => sentence.trim())
     .filter((sentence) => sentence.length >= 20)
+    .map((sentence) => (sentence.length <= 180 ? sentence : `${sentence.slice(0, 177).trimEnd()}...`))
     .slice(0, 3);
 }
 

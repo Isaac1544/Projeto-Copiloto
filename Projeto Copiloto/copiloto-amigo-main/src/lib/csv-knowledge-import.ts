@@ -134,22 +134,31 @@ function buildCaseContent(caseData: {
   ticketId: string;
 }) {
   return [
-    `Título: ${caseData.assunto}`,
-    caseData.categoria ? `Categoria: ${caseData.categoria}` : undefined,
-    caseData.subcategoria ? `Subcategoria: ${caseData.subcategoria}` : undefined,
-    caseData.tipo ? `Tipo: ${caseData.tipo}` : undefined,
-    caseData.prioridade ? `Prioridade: ${caseData.prioridade}` : undefined,
-    caseData.urgencia ? `Urgência: ${caseData.urgencia}` : undefined,
-    caseData.empresa ? `Empresa: ${caseData.empresa}` : undefined,
-    caseData.grupo ? `Grupo: ${caseData.grupo}` : undefined,
-    caseData.origem ? `Origem: ${caseData.origem}` : undefined,
-    caseData.agente ? `Agente anterior: ${caseData.agente}` : undefined,
-    caseData.status ? `Status: ${caseData.status}` : undefined,
-    caseData.horaCriacao ? `Hora da criação: ${caseData.horaCriacao}` : undefined,
-    caseData.ticketId ? `Ticket original: ${caseData.ticketId}` : undefined,
-    `Descrição: ${caseData.descricao}`,
-    caseData.statusResolucao ? `Status da resolução: ${caseData.statusResolucao}` : undefined,
-    caseData.notaResolucao ? `Resolução anterior: ${caseData.notaResolucao}` : undefined,
+    `Caso histórico: ${caseData.assunto}`,
+    [
+      caseData.categoria ? `Categoria ${caseData.categoria}` : undefined,
+      caseData.subcategoria ? `subcategoria ${caseData.subcategoria}` : undefined,
+      caseData.tipo ? `tipo ${caseData.tipo}` : undefined,
+    ]
+      .filter(Boolean)
+      .join(", ") || undefined,
+    [
+      caseData.prioridade ? `Prioridade ${caseData.prioridade}` : undefined,
+      caseData.urgencia ? `urgência ${caseData.urgencia}` : undefined,
+      caseData.status ? `status ${caseData.status}` : undefined,
+    ]
+      .filter(Boolean)
+      .join(", ") || undefined,
+    caseData.empresa || caseData.grupo
+      ? `Contexto operacional: ${[caseData.empresa, caseData.grupo].filter(Boolean).join(" / ")}`
+      : undefined,
+    caseData.horaCriacao ? `Data de abertura original: ${caseData.horaCriacao}` : undefined,
+    caseData.ticketId ? `Identificador original: ${caseData.ticketId}` : undefined,
+    `Relato do caso: ${caseData.descricao}`,
+    caseData.notaResolucao ? `Desfecho anterior: ${caseData.notaResolucao}` : undefined,
+    caseData.statusResolucao ? `Status anterior da resolução: ${caseData.statusResolucao}` : undefined,
+    caseData.agente ? `Analista anterior: ${caseData.agente}` : undefined,
+    caseData.origem ? `Origem do chamado: ${caseData.origem}` : undefined,
   ]
     .filter(Boolean)
     .join("\n");

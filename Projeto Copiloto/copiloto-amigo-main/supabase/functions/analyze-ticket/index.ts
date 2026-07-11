@@ -133,6 +133,37 @@ type ProviderDraft = {
   safetyAlerts: string[];
 };
 
+const RAW_METADATA_LABELS = [
+  "titulo",
+  "categoria",
+  "subcategoria",
+  "tipo",
+  "prioridade",
+  "urgencia",
+  "empresa",
+  "grupo",
+  "origem",
+  "agente",
+  "status",
+  "hora da criacao",
+  "ticket original",
+  "descricao",
+  "resolucao anterior",
+] as const;
+
+const GENERIC_PROBABLE_CAUSE_PATTERNS = [
+  "analise preliminar baseada nas informacoes fornecidas",
+  "requer validacao humana antes de qualquer acao",
+  "hipotese preliminar baseada nas informacoes",
+  "sem evidencia suficiente para confirmar causa raiz",
+] as const;
+
+const GENERIC_CUSTOMER_RESPONSE_PATTERNS = [
+  "recebemos seu chamado e estamos analisando as informacoes",
+  "a equipe de ti ira validar o ajuste necessario",
+  "retornaremos com os proximos passos",
+] as const;
+
 type SanitizationResult =
   | {
       blocked: true;
@@ -305,6 +336,9 @@ function buildPrompt(
     "Quando a evidência não for suficiente para resolver, recomende explicitamente quais dados pedir ou quando escalar.",
     "Quando houver indício de risco, impacto alto, ausência de workaround documentado ou necessidade técnica especializada, recomende escalonamento.",
     "Evite respostas genéricas. Seja específico sobre o que foi entendido do chamado, o que ainda falta confirmar e o que o analista deve fazer a seguir.",
+    "Nunca copie literalmente o texto bruto das evidências, nem devolva metadados como Título, Categoria, Tipo, Prioridade ou Ticket original dentro dos passos recomendados.",
+    "Resuma a evidência com suas próprias palavras e transforme isso em ação operacional objetiva.",
+    "Não cole linhas inteiras de ticket, CSV, KB ou descrição histórica dentro de recommendedSteps.",
     "Retorne JSON puro, sem markdown, com as chaves:",
     "summary, probableCause, recommendedSteps, suggestedResponse, confidenceScore, safetyAlerts.",
     "summary deve resumir o caso em linguagem operacional clara.",
@@ -1000,6 +1034,132 @@ function parseJsonFragment(text: string) {
   return JSON.parse(jsonCandidate);
 }
 
+function normalizeForHeuristics(value: string) {
+  return normalizeText(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function countMetadataLabels(value: string) {
+  const normalized = normalizeForHeuristics(value);
+  return RAW_METADATA_LABELS.filter((label) => normalized.includes(`${label}:`)).length;
+}
+
+function looksLikeRawEvidenceDump(value: string) {
+  const normalized = normalizeForHeuristics(value);
+  const metadataCount = countMetadataLabels(value);
+  return (
+    metadataCount >= 3 ||
+    normalized.length > 260 ||
+    /ticket original:\s*\d+/i.test(value) ||
+    /categoria:\s*.+subcategoria:\s*.+tipo:\s*.+prioridade:/i.test(normalized)
+  );
+}
+
+function cleanRecommendedStep(step: string) {
+  const normalized = normalizeText(step)
+    .replace(/^\d+[.)-]?\s*/, "")
+    .replace(/^[-*•]\s*/, "")
+    .trim();
+
+  if (!normalized) return null;
+  if (looksLikeRawEvidenceDump(normalized)) return null;
+  return normalized;
+}
+
+function isGenericProbableCause(value: string) {
+  const normalized = normalizeForHeuristics(value);
+  return GENERIC_PROBABLE_CAUSE_PATTERNS.some((pattern) => normalized.includes(pattern));
+}
+
+function isGenericSuggestedResponse(value: string) {
+  const normalized = normalizeForHeuristics(value);
+  return GENERIC_CUSTOMER_RESPONSE_PATTERNS.every((pattern) => normalized.includes(pattern));
+}
+
+function lowercaseFirst(text: string) {
+  return text ? `${text.slice(0, 1).toLowerCase()}${text.slice(1)}` : text;
+}
+
+function buildRicherCustomerResponse(
+  ticket: AnalyzeTicketInput,
+  probableCause: string,
+  recommendedSteps: string[],
+) {
+  const firstStep = recommendedSteps[0]
+    ? lowercaseFirst(recommendedSteps[0].replace(/[.;:]$/, ""))
+    : "confirmar os detalhes do ocorrido";
+  const secondStep = recommendedSteps[1]
+    ? lowercaseFirst(recommendedSteps[1].replace(/[.;:]$/, ""))
+    : "validar a tratativa mais segura para o caso";
+
+  return [
+    "Olá!",
+    `Recebemos seu chamado sobre "${ticket.title}" e iniciamos a triagem inicial.`,
+    `No momento, a principal hipótese é: ${probableCause}`,
+    `Como próximos passos, vamos ${firstStep} e ${secondStep}.`,
+    "Caso seja necessário, o atendimento será escalado para o time responsável antes de qualquer ação mais sensível.",
+  ].join(" ");
+}
+
+function normalizeProviderDraft(
+  ticket: AnalyzeTicketInput,
+  sanitizationAlerts: string[],
+  evidence: RankedKnowledgeEvidence[],
+  draft: ProviderDraft,
+): ProviderDraft {
+  const fallback = buildFallbackAnalysis(ticket, sanitizationAlerts, evidence, "openai");
+  const filteredSteps = uniqueStrings(
+    draft.recommendedSteps.map((step) => cleanRecommendedStep(step) ?? "").filter(Boolean),
+  ).slice(0, 5);
+
+  let probableCause = draft.probableCause;
+  let suggestedResponse = draft.suggestedResponse;
+  let confidenceScore = draft.confidenceScore;
+  const safetyAlerts = [...draft.safetyAlerts];
+
+  if (filteredSteps.length < draft.recommendedSteps.length) {
+    safetyAlerts.push(
+      "Trechos brutos de evidência foram removidos da sugestão de resolução antes da exibição.",
+    );
+  }
+
+  const recommendedSteps =
+    filteredSteps.length >= 2 ? filteredSteps : fallback.recommendedSteps.slice(0, 5);
+
+  if (filteredSteps.length < 2) {
+    safetyAlerts.push(
+      "A saída do modelo trouxe passos pouco utilizáveis e foi normalizada com fallback operacional.",
+    );
+    confidenceScore = Math.min(confidenceScore, 74);
+  }
+
+  if (isGenericProbableCause(probableCause)) {
+    probableCause = fallback.probableCause;
+    safetyAlerts.push(
+      "A identificação do problema retornou genérica e foi substituída por uma hipótese operacional mais segura.",
+    );
+    confidenceScore = Math.min(confidenceScore, 72);
+  }
+
+  if (isGenericSuggestedResponse(suggestedResponse)) {
+    suggestedResponse = buildRicherCustomerResponse(ticket, probableCause, recommendedSteps);
+    safetyAlerts.push(
+      "A resposta sugerida ao cliente foi enriquecida para evitar texto genérico demais.",
+    );
+  }
+
+  return {
+    ...draft,
+    probableCause,
+    suggestedResponse,
+    recommendedSteps,
+    confidenceScore: Math.max(0, Math.min(100, Math.round(confidenceScore))),
+    safetyAlerts: uniqueStrings(safetyAlerts),
+  };
+}
+
 function validateProviderDraft(value: unknown): ProviderDraft {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error("Saída da IA fora do formato esperado.");
@@ -1134,11 +1294,18 @@ Deno.serve(async (request) => {
       return jsonResponse(providerResult.response);
     }
 
+    const normalizedDraft = normalizeProviderDraft(
+      sanitization.ticket,
+      sanitization.alerts,
+      evidence,
+      providerResult,
+    );
+
     const response = buildSuccessResponse(
       sanitization.ticket,
       sanitization.maskedFields,
       sanitization.alerts,
-      providerResult,
+      normalizedDraft,
       evidence.map((item) => ({
         title: item.title,
         reference: item.reference,
