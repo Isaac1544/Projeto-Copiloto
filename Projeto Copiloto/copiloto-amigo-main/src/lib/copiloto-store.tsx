@@ -74,6 +74,11 @@ interface SourceRow {
 const EMPTY_ANALISES: Analise[] = [];
 const DEMO_STORAGE_KEY = "copiloto-l1.demo.analises.v1";
 
+function buildWriteFailureMessage(scope: string, error: unknown) {
+  const message = error instanceof Error ? error.message.trim() : String(error ?? "").trim();
+  return message ? `${scope} ${message}` : scope;
+}
+
 function cloneAnalises(items: Analise[]) {
   return JSON.parse(JSON.stringify(items)) as Analise[];
 }
@@ -296,11 +301,8 @@ async function fetchAllForUser(): Promise<Analise[]> {
       const snapshot = await fetchPublicAnalises(getPublicSessionId());
       return mapSnapshotToAnalises(snapshot);
     } catch (error) {
-      console.warn(
-        "Falha ao carregar dados públicos do Supabase. Aplicando fallback local.",
-        error,
-      );
-      return readDemoAnalises();
+      console.error("Falha ao carregar dados públicos do Supabase.", error);
+      return [];
     }
   }
 
@@ -324,8 +326,8 @@ async function fetchAllForUser(): Promise<Analise[]> {
     return analyses.map((a) => rowToAnalise(a, decisions, sources, responsavel));
   } catch (error) {
     if (!shouldFallbackToLocal(error)) throw error;
-    console.warn("Falha ao carregar dados do Supabase. Aplicando fallback local.", error);
-    return readDemoAnalises();
+    console.error("Falha ao carregar dados do Supabase.", error);
+    return [];
   }
 }
 
@@ -366,8 +368,9 @@ export function useCopiloto() {
       }
 
       if (isAuthBypassEnabled()) {
+        const analiseProcessada = await invokeAnalyzeTicket(ticket);
+
         try {
-          const analiseProcessada = await invokeAnalyzeTicket(ticket);
           const response = await createPublicAnalise({
             sessionId: getPublicSessionId(),
             ticket,
@@ -381,19 +384,22 @@ export function useCopiloto() {
           }
           return created;
         } catch (error) {
-          console.warn("Falha ao persistir análise pública. Salvando localmente.", error);
-          const analise = buildAnaliseLocal(ticket, await invokeAnalyzeTicket(ticket));
-          const next = upsertLocalAnalise(analise);
-          setAnalisesCache(() => next);
-          return analise;
+          console.error("Falha ao persistir análise pública.", error);
+          throw new Error(
+            buildWriteFailureMessage(
+              "A análise foi gerada, mas não pôde ser salva na sessão pública.",
+              error,
+            ),
+          );
         }
       }
+
+      const analiseProcessada = await invokeAnalyzeTicket(ticket);
 
       try {
         const { data: userData } = await supabase.auth.getUser();
         const user = userData.user;
         if (!user) throw new Error("Sessão expirada. Faça login novamente.");
-        const analiseProcessada = await invokeAnalyzeTicket(ticket);
         const sugestao = {
           resumo: analiseProcessada.summary,
           possivelCausa: analiseProcessada.probableCause,
@@ -465,12 +471,13 @@ export function useCopiloto() {
         invalidate();
         return analise;
       } catch (error) {
-        if (!shouldFallbackToLocal(error)) throw error;
-        console.warn("Falha ao persistir análise no Supabase. Salvando localmente.", error);
-        const analise = buildAnaliseLocal(ticket, await invokeAnalyzeTicket(ticket));
-        const next = upsertLocalAnalise(analise);
-        setAnalisesCache(() => next);
-        return analise;
+        console.error("Falha ao persistir análise no Supabase.", error);
+        throw new Error(
+          buildWriteFailureMessage(
+            "A análise foi gerada, mas não pôde ser persistida no Supabase.",
+            error,
+          ),
+        );
       }
     },
     [invalidate, setAnalisesCache],
@@ -514,12 +521,13 @@ export function useCopiloto() {
           setAnalisesCache(() => mapSnapshotToAnalises(response.snapshot));
           return;
         } catch (error) {
-          console.warn("Falha ao registrar decisão pública. Salvando localmente.", error);
-          const current = readDemoAnalises();
-          const next = registrarDecisaoLocal(current, id, input);
-          persistDemoAnalises(next);
-          setAnalisesCache(() => next);
-          return;
+          console.error("Falha ao registrar decisão pública.", error);
+          throw new Error(
+            buildWriteFailureMessage(
+              "Não foi possível registrar a decisão na sessão pública.",
+              error,
+            ),
+          );
         }
       }
 
@@ -547,12 +555,10 @@ export function useCopiloto() {
         if (updErr) throw updErr;
         invalidate();
       } catch (error) {
-        if (!shouldFallbackToLocal(error)) throw error;
-        console.warn("Falha ao registrar decisão no Supabase. Salvando localmente.", error);
-        const current = readDemoAnalises();
-        const next = registrarDecisaoLocal(current, id, input);
-        persistDemoAnalises(next);
-        setAnalisesCache(() => next);
+        console.error("Falha ao registrar decisão no Supabase.", error);
+        throw new Error(
+          buildWriteFailureMessage("Não foi possível registrar a decisão no Supabase.", error),
+        );
       }
     },
     [invalidate, setAnalisesCache],
@@ -578,12 +584,13 @@ export function useCopiloto() {
           setAnalisesCache(() => mapSnapshotToAnalises(response.snapshot));
           return;
         } catch (error) {
-          console.warn("Falha ao reabrir decisão pública. Salvando localmente.", error);
-          const current = readDemoAnalises();
-          const next = reabrirDecisaoLocal(current, id);
-          persistDemoAnalises(next);
-          setAnalisesCache(() => next);
-          return;
+          console.error("Falha ao reabrir decisão pública.", error);
+          throw new Error(
+            buildWriteFailureMessage(
+              "Não foi possível reabrir a decisão na sessão pública.",
+              error,
+            ),
+          );
         }
       }
 
@@ -600,12 +607,10 @@ export function useCopiloto() {
         await supabase.from("ticket_analyses").update({ status: "Pendente" }).eq("id", id);
         invalidate();
       } catch (error) {
-        if (!shouldFallbackToLocal(error)) throw error;
-        console.warn("Falha ao reabrir decisão no Supabase. Salvando localmente.", error);
-        const current = readDemoAnalises();
-        const next = reabrirDecisaoLocal(current, id);
-        persistDemoAnalises(next);
-        setAnalisesCache(() => next);
+        console.error("Falha ao reabrir decisão no Supabase.", error);
+        throw new Error(
+          buildWriteFailureMessage("Não foi possível reabrir a decisão no Supabase.", error),
+        );
       }
     },
     [invalidate, setAnalisesCache],

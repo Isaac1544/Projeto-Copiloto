@@ -31,6 +31,21 @@ function getPublishableKey() {
   return publishableKey;
 }
 
+function buildRemoteAnalysisErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message.trim() : String(error ?? "").trim();
+
+  if (!message) {
+    return "Não foi possível gerar a análise no backend configurado.";
+  }
+
+  const lowered = message.toLowerCase();
+  if (lowered.includes("failed to fetch") || lowered === "fetch") {
+    return "Não foi possível conectar ao backend de análise. Verifique o deploy da função analyze-ticket e a configuração do Supabase.";
+  }
+
+  return message;
+}
+
 async function invokeAnalyzeTicketRemotely(payload: ReturnType<typeof validateAnalyzeTicketInput>) {
   const endpoint = getAnalyzeTicketEndpoint();
   const publishableKey = getPublishableKey();
@@ -138,6 +153,7 @@ function buildMockAnalysis(ticket: Ticket): AnalyzeTicketAnalysis {
   const sources = [...evidenceSources, ...fallbackSources].slice(0, 5);
   const safetyAlerts = uniqueStrings([
     ...sugestao.alertasLgpd,
+    "Modo demonstração ativo: esta análise foi gerada localmente e não veio do provedor de IA configurado.",
     ...(analystEvidence.length > 0
       ? ["Base de conhecimento enviada pelo analista foi consultada nesta análise local."]
       : []),
@@ -172,7 +188,7 @@ export async function invokeAnalyzeTicket(ticket: Ticket): Promise<AnalyzeTicket
     const analysis = await invokeAnalyzeTicketRemotely(payload);
     return mergeAnalystEvidence(analysis, analystEvidence);
   } catch (error) {
-    console.warn("Falha ao usar analyze-ticket server-side. Aplicando fallback local.", error);
-    return buildMockAnalysis(ticket);
+    console.error("Falha ao usar analyze-ticket server-side.", error);
+    throw new Error(buildRemoteAnalysisErrorMessage(error));
   }
 }
