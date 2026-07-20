@@ -28,6 +28,14 @@ const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/openai/
 const OPENAI_API_URL = "https://api.openai.com/v1/responses";
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const DEFAULT_TIMEOUT_MS = 25_000;
+const ERROR_RESPONSE_LIMITS = {
+  message: 280,
+  safetyAlert: 240,
+  blockedReason: 280,
+  maskedField: 40,
+  maxSafetyAlerts: 10,
+  maxMaskedFields: 5,
+} as const;
 
 type ProviderName = "gemini" | "openai" | "anthropic";
 
@@ -78,6 +86,13 @@ const OPENAI_ANALYSIS_SCHEMA = {
       },
     },
   },
+} as const;
+
+const ANTHROPIC_ANALYSIS_TOOL = {
+  name: "submit_ticket_analysis",
+  description:
+    "Retorna a análise estruturada do chamado para o Copiloto L1 no formato esperado pela aplicação.",
+  input_schema: OPENAI_ANALYSIS_SCHEMA,
 } as const;
 
 const BLOCKED_PATTERNS = [
@@ -188,6 +203,55 @@ function jsonResponse(
   });
 }
 
+function truncateForContract(value: string, maxLength: number) {
+  const normalized = normalizeText(value);
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+  if (maxLength <= 1) {
+    return normalized.slice(0, maxLength);
+  }
+  return `${normalized.slice(0, maxLength - 1)}…`;
+}
+
+function normalizeErrorBody({
+  code,
+  message,
+  retryable,
+  safetyAlerts = [],
+  maskedFields = [],
+  blockedReason,
+}: {
+  code: AnalyzeTicketErrorCode;
+  message: string;
+  retryable: boolean;
+  safetyAlerts?: string[];
+  maskedFields?: string[];
+  blockedReason?: string;
+}): AnalyzeTicketErrorResponse {
+  return {
+    ok: false,
+    error: {
+      code,
+      message: truncateForContract(message, ERROR_RESPONSE_LIMITS.message),
+      retryable,
+      safetyAlerts: uniqueStrings(
+        safetyAlerts
+          .map((alert) => truncateForContract(alert, ERROR_RESPONSE_LIMITS.safetyAlert))
+          .filter(Boolean),
+      ).slice(0, ERROR_RESPONSE_LIMITS.maxSafetyAlerts),
+      maskedFields: uniqueStrings(
+        maskedFields
+          .map((field) => normalizeText(field).slice(0, ERROR_RESPONSE_LIMITS.maskedField))
+          .filter(Boolean),
+      ).slice(0, ERROR_RESPONSE_LIMITS.maxMaskedFields),
+      blockedReason: blockedReason
+        ? truncateForContract(blockedReason, ERROR_RESPONSE_LIMITS.blockedReason)
+        : undefined,
+    },
+  };
+}
+
 function errorResponse({
   code,
   message,
@@ -203,17 +267,16 @@ function errorResponse({
   maskedFields?: string[];
   blockedReason?: string;
 }) {
-  return jsonResponse({
-    ok: false,
-    error: {
+  return jsonResponse(
+    normalizeErrorBody({
       code,
       message,
       retryable,
       safetyAlerts,
       maskedFields,
       blockedReason,
-    },
-  });
+    }),
+  );
 }
 
 function normalizeText(value: string) {
@@ -762,6 +825,11 @@ async function callAnthropic(
         max_tokens: 900,
         system,
         messages: [{ role: "user", content: user }],
+        tools: [ANTHROPIC_ANALYSIS_TOOL],
+        tool_choice: {
+          type: "tool",
+          name: ANTHROPIC_ANALYSIS_TOOL.name,
+        },
       }),
       signal: controller.signal,
     });
@@ -787,8 +855,18 @@ async function callAnthropic(
     }
 
     try {
-      const text = extractAnthropicText(payload);
-      const draft = validateProviderDraft(parseJsonFragment(text));
+      const parsedDraft = extractAnthropicToolDraft(payload);
+      const fallback = buildFallbackAnalysis(ticket, sanitizationAlerts, evidence, "anthropic");
+      const draft = parsedDraft
+        ? coerceProviderDraftWithFallback(parsedDraft, {
+            summary: fallback.summary,
+            probableCause: fallback.probableCause,
+            recommendedSteps: fallback.recommendedSteps,
+            suggestedResponse: fallback.suggestedResponse,
+            confidenceScore: fallback.confidenceScore,
+            safetyAlerts: fallback.safetyAlerts,
+          })
+        : validateProviderDraft(parseJsonFragment(extractAnthropicText(payload)));
       return draft;
     } catch (error) {
       const detail = error instanceof Error ? ` Detalhe técnico: ${error.message}` : "";
@@ -879,6 +957,32 @@ function extractAnthropicText(payload: unknown) {
     throw new Error("O provedor não retornou texto analisável.");
   }
   return text;
+}
+
+function extractAnthropicToolDraft(payload: unknown) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return null;
+  }
+
+  const record = payload as Record<string, unknown>;
+  const content = record.content;
+  if (!Array.isArray(content)) {
+    return null;
+  }
+
+  for (const block of content) {
+    if (!block || typeof block !== "object" || Array.isArray(block)) continue;
+    const blockRecord = block as Record<string, unknown>;
+    if (blockRecord.type !== "tool_use") continue;
+    if (blockRecord.name !== ANTHROPIC_ANALYSIS_TOOL.name) continue;
+
+    const input = blockRecord.input;
+    if (input && typeof input === "object" && !Array.isArray(input)) {
+      return input;
+    }
+  }
+
+  return null;
 }
 
 function extractOpenAIText(payload: unknown) {
@@ -1082,6 +1186,70 @@ function lowercaseFirst(text: string) {
   return text ? `${text.slice(0, 1).toLowerCase()}${text.slice(1)}` : text;
 }
 
+function coerceTextValue(value: unknown): string {
+  if (typeof value === "string") {
+    return normalizeText(value);
+  }
+
+  if (typeof value === "number" || typeof value === "boolean") {
+    return normalizeText(String(value));
+  }
+
+  if (Array.isArray(value)) {
+    return normalizeText(
+      value
+        .map((item) => coerceTextValue(item))
+        .filter(Boolean)
+        .join("\n"),
+    );
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+
+    if (typeof record.text === "string") {
+      return normalizeText(record.text);
+    }
+
+    if (typeof record.value === "string") {
+      return normalizeText(record.value);
+    }
+
+    if (typeof record.message === "string") {
+      return normalizeText(record.message);
+    }
+
+    if (Array.isArray(record.content)) {
+      return normalizeText(
+        record.content
+          .map((item) => coerceTextValue(item))
+          .filter(Boolean)
+          .join("\n"),
+      );
+    }
+  }
+
+  return "";
+}
+
+function coerceNumberValue(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  const textValue = coerceTextValue(value);
+  if (!textValue) {
+    return Number.NaN;
+  }
+
+  const normalizedNumeric = textValue.replace(",", ".").match(/-?\d+(?:\.\d+)?/);
+  if (!normalizedNumeric) {
+    return Number.NaN;
+  }
+
+  return Number(normalizedNumeric[0]);
+}
+
 function buildRicherCustomerResponse(
   ticket: AnalyzeTicketInput,
   probableCause: string,
@@ -1143,7 +1311,13 @@ function normalizeProviderDraft(
     confidenceScore = Math.min(confidenceScore, 72);
   }
 
-  if (isGenericSuggestedResponse(suggestedResponse)) {
+  if (!suggestedResponse) {
+    suggestedResponse = buildRicherCustomerResponse(ticket, probableCause, recommendedSteps);
+    safetyAlerts.push(
+      "A resposta sugerida ao cliente não veio utilizável do modelo e foi reconstruída a partir da hipótese e dos próximos passos.",
+    );
+    confidenceScore = Math.min(confidenceScore, 72);
+  } else if (isGenericSuggestedResponse(suggestedResponse)) {
     suggestedResponse = buildRicherCustomerResponse(ticket, probableCause, recommendedSteps);
     safetyAlerts.push(
       "A resposta sugerida ao cliente foi enriquecida para evitar texto genérico demais.",
@@ -1160,20 +1334,115 @@ function normalizeProviderDraft(
   };
 }
 
+function readOptionalFlexibleNumber(source: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = coerceNumberValue(source[key]);
+    if (Number.isFinite(value)) {
+      return value;
+    }
+  }
+  return Number.NaN;
+}
+
+function readOptionalFlexibleArray(
+  source: Record<string, unknown>,
+  keys: string[],
+  options?: { maxItems?: number },
+) {
+  for (const key of keys) {
+    const value = source[key];
+    if (!Array.isArray(value)) {
+      continue;
+    }
+    const normalized = value.map((item) => coerceTextValue(item)).filter(Boolean);
+    if (normalized.length > 0) {
+      return normalized.slice(0, options?.maxItems ?? normalized.length);
+    }
+  }
+  return [] as string[];
+}
+
+function coerceProviderDraftWithFallback(value: unknown, fallback: ProviderDraft): ProviderDraft {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return fallback;
+  }
+
+  const record = value as Record<string, unknown>;
+  const summary =
+    readOptionalFlexibleString(record, ["summary", "resumo", "caseSummary"]) || fallback.summary;
+  const probableCause =
+    readOptionalFlexibleString(record, [
+      "probableCause",
+      "probable_cause",
+      "problemIdentification",
+      "problem_identification",
+      "identificacaoProblema",
+    ]) || fallback.probableCause;
+  const suggestedResponse =
+    readOptionalFlexibleString(record, [
+      "suggestedResponse",
+      "suggested_response",
+      "customerResponse",
+      "customer_response",
+      "responseToCustomer",
+      "response_to_customer",
+    ]) || fallback.suggestedResponse;
+  const recommendedSteps = readOptionalFlexibleArray(
+    record,
+    [
+      "recommendedSteps",
+      "recommended_steps",
+      "resolutionSteps",
+      "resolution_steps",
+      "nextSteps",
+      "next_steps",
+    ],
+    { maxItems: 6 },
+  );
+  const safetyAlerts = readOptionalFlexibleArray(
+    record,
+    ["safetyAlerts", "safety_alerts", "alerts"],
+    { maxItems: 10 },
+  );
+  const confidenceScore = readOptionalFlexibleNumber(record, [
+    "confidenceScore",
+    "confidence_score",
+    "confidence",
+  ]);
+
+  return {
+    summary,
+    probableCause,
+    suggestedResponse,
+    recommendedSteps: recommendedSteps.length > 0 ? recommendedSteps : fallback.recommendedSteps,
+    confidenceScore: Number.isFinite(confidenceScore)
+      ? Math.max(0, Math.min(100, Math.round(confidenceScore)))
+      : fallback.confidenceScore,
+    safetyAlerts,
+  };
+}
+
 function validateProviderDraft(value: unknown): ProviderDraft {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error("Saída da IA fora do formato esperado.");
   }
   const record = value as Record<string, unknown>;
 
-  const summary = readNonEmptyString(record, "summary");
-  const probableCause = readNonEmptyString(record, "probableCause");
-  const suggestedResponse = readNonEmptyString(record, "suggestedResponse");
-  const confidenceRaw = record.confidenceScore;
+  const summary = readNonEmptyFlexibleString(record, "summary");
+  const probableCause = readNonEmptyFlexibleString(record, "probableCause");
+  const suggestedResponse = readOptionalFlexibleString(record, [
+    "suggestedResponse",
+    "suggested_response",
+    "customerResponse",
+    "customer_response",
+    "responseToCustomer",
+    "response_to_customer",
+  ]);
+  const confidenceRaw = coerceNumberValue(record.confidenceScore);
   const stepsRaw = record.recommendedSteps;
   const alertsRaw = record.safetyAlerts ?? [];
 
-  if (typeof confidenceRaw !== "number" || !Number.isFinite(confidenceRaw)) {
+  if (!Number.isFinite(confidenceRaw)) {
     throw new Error("confidenceScore precisa ser numérico.");
   }
   if (!Array.isArray(stepsRaw) || stepsRaw.length === 0) {
@@ -1190,22 +1459,20 @@ function validateProviderDraft(value: unknown): ProviderDraft {
     confidenceScore: Math.max(0, Math.min(100, Math.round(confidenceRaw))),
     recommendedSteps: stepsRaw
       .map((step, index) => {
-        if (typeof step !== "string") {
-          throw new Error(`recommendedSteps[${index}] precisa ser texto.`);
-        }
-        const normalized = normalizeText(step);
+        const normalized = coerceTextValue(step);
         if (!normalized) {
-          throw new Error(`recommendedSteps[${index}] não pode ficar vazio.`);
+          throw new Error(`recommendedSteps[${index}] precisa ser texto utilizável.`);
         }
         return normalized;
       })
       .slice(0, 6),
     safetyAlerts: alertsRaw
       .map((alert, index) => {
-        if (typeof alert !== "string") {
-          throw new Error(`safetyAlerts[${index}] precisa ser texto.`);
+        const normalized = coerceTextValue(alert);
+        if (!normalized) {
+          throw new Error(`safetyAlerts[${index}] precisa ser texto utilizável.`);
         }
-        return normalizeText(alert);
+        return normalized;
       })
       .filter(Boolean)
       .slice(0, 10),
@@ -1222,6 +1489,24 @@ function readNonEmptyString(source: Record<string, unknown>, key: string) {
     throw new Error(`${key} não pode ficar vazio.`);
   }
   return normalized;
+}
+
+function readNonEmptyFlexibleString(source: Record<string, unknown>, key: string) {
+  const normalized = coerceTextValue(source[key]);
+  if (!normalized) {
+    throw new Error(`${key} precisa ser texto.`);
+  }
+  return normalized;
+}
+
+function readOptionalFlexibleString(source: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const normalized = coerceTextValue(source[key]);
+    if (normalized) {
+      return normalized;
+    }
+  }
+  return "";
 }
 
 function buildSuccessResponse(
@@ -1291,7 +1576,7 @@ Deno.serve(async (request) => {
     );
 
     if ("kind" in providerResult) {
-      return jsonResponse(providerResult.response);
+      return jsonResponse(normalizeErrorBody(providerResult.response.error));
     }
 
     const normalizedDraft = normalizeProviderDraft(

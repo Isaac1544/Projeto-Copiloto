@@ -5,6 +5,7 @@ import {
 } from "./analyst-knowledge";
 import { gerarSugestaoMock, montarContextoAnalise, type Ticket } from "./mock-data";
 import {
+  AnalyzeTicketValidationError,
   confidenceScoreToLevel,
   uniqueStrings,
   validateAnalyzeTicketInput,
@@ -46,6 +47,36 @@ function buildRemoteAnalysisErrorMessage(error: unknown) {
   return message;
 }
 
+function extractRemoteErrorMessageFromBody(body: unknown) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return null;
+  }
+
+  const record = body as Record<string, unknown>;
+  if (record.ok !== false) {
+    return null;
+  }
+
+  const error = record.error;
+  if (!error || typeof error !== "object" || Array.isArray(error)) {
+    return null;
+  }
+
+  const errorRecord = error as Record<string, unknown>;
+  const message =
+    typeof errorRecord.message === "string" ? errorRecord.message.trim() : "";
+
+  if (!message) {
+    return "O backend retornou um erro sem mensagem legível.";
+  }
+
+  if (message.length <= 280) {
+    return message;
+  }
+
+  return `${message.slice(0, 279)}…`;
+}
+
 async function invokeAnalyzeTicketRemotely(payload: ReturnType<typeof validateAnalyzeTicketInput>) {
   const endpoint = getAnalyzeTicketEndpoint();
   const publishableKey = getPublishableKey();
@@ -65,11 +96,23 @@ async function invokeAnalyzeTicketRemotely(payload: ReturnType<typeof validateAn
 
   if (!response.ok) {
     const functionalMessage =
-      body && !body.ok ? body.error.message : `HTTP ${response.status} ao chamar analyze-ticket.`;
+      extractRemoteErrorMessageFromBody(body) ?? `HTTP ${response.status} ao chamar analyze-ticket.`;
     throw new Error(functionalMessage);
   }
 
-  const validated = validateAnalyzeTicketResponse(body);
+  let validated: ReturnType<typeof validateAnalyzeTicketResponse>;
+  try {
+    validated = validateAnalyzeTicketResponse(body);
+  } catch (error) {
+    const fallbackMessage =
+      extractRemoteErrorMessageFromBody(body) ??
+      "O backend retornou uma resposta de erro fora do contrato esperado.";
+    if (error instanceof AnalyzeTicketValidationError) {
+      throw new Error(fallbackMessage);
+    }
+    throw new Error(buildRemoteAnalysisErrorMessage(error) || fallbackMessage);
+  }
+
   if (!validated.ok) {
     throw new Error(validated.error.message);
   }

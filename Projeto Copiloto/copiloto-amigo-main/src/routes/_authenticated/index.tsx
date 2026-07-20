@@ -145,6 +145,24 @@ function Dashboard() {
         </Alert>
       )}
 
+      <Card className="mb-6 border-primary/15 bg-primary/5">
+        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-sm font-medium text-primary">
+              <Info className="h-4 w-4" />
+              Saiba mais sobre o sistema
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Abra o manual do MVP para ver a descrição do sistema, funcionalidades principais,
+              limitações atuais e próximos passos.
+            </p>
+          </div>
+          <Button asChild variant="outline">
+            <Link to="/manual">Abrir manual</Link>
+          </Button>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
         {cards.map((c) => (
           <Card key={c.label}>

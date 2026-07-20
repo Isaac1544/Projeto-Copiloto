@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedNovoAtendimentoRouteImport } from './routes/_authenticated/novo-atendimento'
+import { Route as AuthenticatedManualRouteImport } from './routes/_authenticated/manual'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedBaseConhecimentoRouteImport } from './routes/_authenticated/base-conhecimento'
 import { Route as AuthenticatedResultadoIdRouteImport } from './routes/_authenticated/resultado.$id'
@@ -37,6 +38,11 @@ const AuthenticatedNovoAtendimentoRoute =
     path: '/novo-atendimento',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManualRoute = AuthenticatedManualRouteImport.update({
+  id: '/manual',
+  path: '/manual',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedHistoricoRoute = AuthenticatedHistoricoRouteImport.update({
   id: '/historico',
   path: '/historico',
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/base-conhecimento': typeof AuthenticatedBaseConhecimentoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
+  '/manual': typeof AuthenticatedManualRoute
   '/novo-atendimento': typeof AuthenticatedNovoAtendimentoRoute
   '/resultado/$id': typeof AuthenticatedResultadoIdRoute
 }
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/base-conhecimento': typeof AuthenticatedBaseConhecimentoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
+  '/manual': typeof AuthenticatedManualRoute
   '/novo-atendimento': typeof AuthenticatedNovoAtendimentoRoute
   '/': typeof AuthenticatedIndexRoute
   '/resultado/$id': typeof AuthenticatedResultadoIdRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/base-conhecimento': typeof AuthenticatedBaseConhecimentoRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
+  '/_authenticated/manual': typeof AuthenticatedManualRoute
   '/_authenticated/novo-atendimento': typeof AuthenticatedNovoAtendimentoRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/resultado/$id': typeof AuthenticatedResultadoIdRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/base-conhecimento'
     | '/historico'
+    | '/manual'
     | '/novo-atendimento'
     | '/resultado/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/base-conhecimento'
     | '/historico'
+    | '/manual'
     | '/novo-atendimento'
     | '/'
     | '/resultado/$id'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/base-conhecimento'
     | '/_authenticated/historico'
+    | '/_authenticated/manual'
     | '/_authenticated/novo-atendimento'
     | '/_authenticated/'
     | '/_authenticated/resultado/$id'
@@ -144,6 +156,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNovoAtendimentoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manual': {
+      id: '/_authenticated/manual'
+      path: '/manual'
+      fullPath: '/manual'
+      preLoaderRoute: typeof AuthenticatedManualRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/historico': {
       id: '/_authenticated/historico'
       path: '/historico'
@@ -171,6 +190,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBaseConhecimentoRoute: typeof AuthenticatedBaseConhecimentoRoute
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
+  AuthenticatedManualRoute: typeof AuthenticatedManualRoute
   AuthenticatedNovoAtendimentoRoute: typeof AuthenticatedNovoAtendimentoRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedResultadoIdRoute: typeof AuthenticatedResultadoIdRoute
@@ -179,6 +199,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBaseConhecimentoRoute: AuthenticatedBaseConhecimentoRoute,
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
+  AuthenticatedManualRoute: AuthenticatedManualRoute,
   AuthenticatedNovoAtendimentoRoute: AuthenticatedNovoAtendimentoRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedResultadoIdRoute: AuthenticatedResultadoIdRoute,

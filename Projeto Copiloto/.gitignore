@@ -31,6 +31,7 @@ tmp/
 temp/
 .pnpm-store/
 remote-check/
+outputs/
 
 # Sensitive raw data
 data/raw/

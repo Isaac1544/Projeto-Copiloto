@@ -1,5 +1,5 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Bot, BookOpen, LayoutDashboard, PlusCircle, History, LogOut } from "lucide-react";
+﻿import { Link, useNavigate } from "@tanstack/react-router";
+import { Bot, BookOpen, LayoutDashboard, PlusCircle, History, LogOut, Info } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ const navItems = [
   { to: "/novo-atendimento", label: "Novo atendimento", icon: PlusCircle, exact: false },
   { to: "/base-conhecimento", label: "Base de conhecimento", icon: BookOpen, exact: false },
   { to: "/historico", label: "Histórico", icon: History, exact: false },
+  { to: "/manual", label: "Manual", icon: Info, exact: false },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -96,10 +97,19 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">{children}</main>
       <footer className="border-t border-border bg-card">
-        <div className="mx-auto max-w-7xl px-6 py-4 text-xs text-muted-foreground">
-          Sugestão gerada por IA. A decisão final é humana.
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <span>Sugestão gerada por IA. A decisão final é humana.</span>
+          <Link
+            to="/manual"
+            className="font-medium text-primary transition-colors hover:text-primary/80"
+          >
+            Saiba mais sobre o sistema
+          </Link>
         </div>
       </footer>
     </div>
   );
 }
+
+
+
